@@ -72,6 +72,25 @@
       background: #fff;
     }
     input[type="file"] { padding: 8px; }
+    .advanced-toggle {
+      background: transparent;
+      color: var(--accent);
+      border: 1px dashed var(--line);
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .advanced-panel {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid #e6eef3;
+      border-radius: 8px;
+      background: #f8fbfc;
+      display: none;
+    }
+    .advanced-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    @media (max-width: 760px) { .advanced-grid { grid-template-columns: 1fr; } }
     .hint {
       color: var(--muted);
       font-size: 13px;
@@ -204,6 +223,51 @@
           <input id="sensitivity" type="number" step="any" value="4.35e-5">
         </div>
       </div>
+      <div style="margin-top:12px; display:flex; gap:10px; align-items:center;">
+        <button type="button" id="advanced-toggle" class="advanced-toggle">Advanced options</button>
+      </div>
+      <div id="advanced-panel" class="advanced-panel">
+        <div class="advanced-grid">
+          <div>
+            <label for="xDivisions">X axis divisions</label>
+            <input id="xDivisions" type="number" min="2" value="7">
+          </div>
+          <div>
+            <label for="yDivisions">Y axis divisions</label>
+            <input id="yDivisions" type="number" min="2" value="7">
+          </div>
+          <div>
+            <label for="xMin">X axis min (optional)</label>
+            <input id="xMin" type="number" step="any" placeholder="auto">
+          </div>
+          <div>
+            <label for="xMax">X axis max (optional)</label>
+            <input id="xMax" type="number" step="any" placeholder="auto">
+          </div>
+          <div>
+            <label for="yMin">Y axis min (optional)</label>
+            <input id="yMin" type="number" step="any" placeholder="auto">
+          </div>
+          <div>
+            <label for="yMax">Y axis max (optional)</label>
+            <input id="yMax" type="number" step="any" placeholder="auto">
+          </div>
+          <div>
+            <label for="colorScheme">Color scheme</label>
+            <select id="colorScheme">
+              <option value="default" selected>Default</option>
+              <option value="warm">Warm</option>
+              <option value="cool">Cool</option>
+              <option value="mono">Grayscale</option>
+            </select>
+          </div>
+          <div>
+            <label for="lineWidth">Line width</label>
+            <input id="lineWidth" type="number" min="1" max="10" value="2.8">
+          </div>
+        </div>
+      </div>
+
       <div class="actions">
         <button type="submit">Generate Heat Flux Graphs</button>
       </div>
@@ -224,6 +288,23 @@
   <script>
     const MICRO = 1e-6;
     const colors = ["#1f6f8b", "#b4412d", "#487f45", "#804f97", "#bd7e24", "#3460a0", "#8d4c3b", "#54867d"];
+    const palettes = {
+      default: colors,
+      warm: ["#b4412d", "#bd7e24", "#8d4c3b", "#8d4c3b"],
+      cool: ["#1f6f8b", "#3460a0", "#54867d", "#487f45"],
+      mono: ["#111", "#333", "#666", "#999"]
+    };
+
+    // Advanced panel toggle
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggle = document.getElementById('advanced-toggle');
+      const panel = document.getElementById('advanced-panel');
+      if (toggle && panel) {
+        toggle.addEventListener('click', () => {
+          panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        });
+      }
+    });
 
     function showMessage(text) {
       const el = document.getElementById("message");
@@ -398,7 +479,7 @@
       return datasets;
     }
 
-    function drawPlot(canvas, datasets, yKey, title) {
+    function drawPlot(canvas, datasets, yKey, title, plotOptions = {}) {
       const ctx = canvas.getContext("2d");
       const width = canvas.width;
       const height = canvas.height;
@@ -417,6 +498,14 @@
       let xmax = Math.max(...xs);
       let ymin = Math.min(...ys);
       let ymax = Math.max(...ys);
+      // apply optional overrides
+      if (typeof plotOptions.xmin === 'number' && isFinite(plotOptions.xmin)) xmin = plotOptions.xmin;
+      if (typeof plotOptions.xmax === 'number' && isFinite(plotOptions.xmax)) xmax = plotOptions.xmax;
+      if (typeof plotOptions.ymin === 'number' && isFinite(plotOptions.ymin)) ymin = plotOptions.ymin;
+      if (typeof plotOptions.ymax === 'number' && isFinite(plotOptions.ymax)) ymax = plotOptions.ymax;
+      // fallback if invalid ranges
+      if (!isFinite(xmin) || !isFinite(xmax) || xmin === xmax) { xmin = Math.min(...xs); xmax = Math.max(...xs); }
+      if (!isFinite(ymin) || !isFinite(ymax) || ymin === ymax) { ymin = Math.min(...ys); ymax = Math.max(...ys); }
       const ypad = 0.08 * Math.max(1e-12, ymax - ymin);
       ymin -= ypad;
       ymax += ypad;
@@ -432,7 +521,9 @@
       ctx.strokeStyle = "#dde2e6";
       ctx.fillStyle = "#2d363d";
       ctx.font = "13px Arial";
-      for (const tick of niceTicks(xmin, xmax, 7)) {
+      const xDivisions = (plotOptions.xDivisions && Number(plotOptions.xDivisions) > 1) ? Number(plotOptions.xDivisions) : 7;
+      const yDivisions = (plotOptions.yDivisions && Number(plotOptions.yDivisions) > 1) ? Number(plotOptions.yDivisions) : 7;
+      for (const tick of niceTicks(xmin, xmax, xDivisions)) {
         const x = xp(tick);
         ctx.beginPath();
         ctx.moveTo(x, top);
@@ -440,7 +531,7 @@
         ctx.stroke();
         ctx.fillText(tick.toFixed(4), x - 32, top + plotH + 28);
       }
-      for (const tick of niceTicks(ymin, ymax, 7)) {
+      for (const tick of niceTicks(ymin, ymax, yDivisions)) {
         const y = yp(tick);
         ctx.beginPath();
         ctx.moveTo(left, y);
@@ -448,9 +539,11 @@
         ctx.stroke();
         ctx.fillText(tick.toPrecision(3), 24, y + 4);
       }
+      const palette = (plotOptions.colorPalette && Array.isArray(plotOptions.colorPalette)) ? plotOptions.colorPalette : colors;
+      const lineW = (plotOptions.lineWidth && Number(plotOptions.lineWidth) > 0) ? Number(plotOptions.lineWidth) : 2.8;
       datasets.forEach((set, index) => {
-        ctx.strokeStyle = colors[index % colors.length];
-        ctx.lineWidth = 2.8;
+        ctx.strokeStyle = palette[index % palette.length];
+        ctx.lineWidth = lineW;
         ctx.beginPath();
         set.data.forEach((row, i) => {
           const x = xp(row.time_s);
@@ -536,6 +629,17 @@
           beta: Number(document.getElementById("beta").value),
           sensitivity: Number(document.getElementById("sensitivity").value)
         };
+        // gather advanced plot options (only applied if advanced is toggled)
+        const plotOptions = {
+          xDivisions: Number(document.getElementById('xDivisions').value || 7),
+          yDivisions: Number(document.getElementById('yDivisions').value || 7),
+          xmin: (() => { const v = document.getElementById('xMin').value; return v === '' ? undefined : Number(v); })(),
+          xmax: (() => { const v = document.getElementById('xMax').value; return v === '' ? undefined : Number(v); })(),
+          ymin: (() => { const v = document.getElementById('yMin').value; return v === '' ? undefined : Number(v); })(),
+          ymax: (() => { const v = document.getElementById('yMax').value; return v === '' ? undefined : Number(v); })(),
+          colorPalette: palettes[document.getElementById('colorScheme').value] || palettes.default,
+          lineWidth: Number(document.getElementById('lineWidth').value || 2.8)
+        };
         const all = [];
         for (const file of files) {
           all.push(...await readFileDatasets(file, settings));
@@ -543,8 +647,8 @@
         if (!all.length) throw new Error("No usable numeric time/voltage data was found.");
         const rawCanvas = document.getElementById("raw-canvas");
         const smoothCanvas = document.getElementById("smooth-canvas");
-        drawPlot(rawCanvas, all, "heat_flux_w_cm2", "Combined Raw Heat Flux vs Time");
-        drawPlot(smoothCanvas, all, "heat_flux_savgol_w_cm2", `Combined Savitzky-Golay Heat Flux vs Time (${settings.smoothWindow} points)`);
+        drawPlot(rawCanvas, all, "heat_flux_w_cm2", "Combined Raw Heat Flux vs Time", plotOptions);
+        drawPlot(smoothCanvas, all, "heat_flux_savgol_w_cm2", `Combined Savitzky-Golay Heat Flux vs Time (${settings.smoothWindow} points)`, plotOptions);
         const downloads = document.getElementById("downloads");
         downloads.innerHTML = "";
         downloads.appendChild(canvasDownloadLink(rawCanvas, "combined_heat_flux_raw.png"));
