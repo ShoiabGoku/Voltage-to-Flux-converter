@@ -263,7 +263,45 @@
           </div>
           <div>
             <label for="lineWidth">Line width</label>
-            <input id="lineWidth" type="number" min="1" max="10" value="2.8">
+            <input id="lineWidth" type="number" min="1" max="10" step="0.1" value="2.8">
+          </div>
+          <div>
+            <label for="xTickInterval">X tick interval (optional)</label>
+            <input id="xTickInterval" type="number" step="any" placeholder="auto">
+          </div>
+          <div>
+            <label for="yTickInterval">Y tick interval (optional)</label>
+            <input id="yTickInterval" type="number" step="any" placeholder="auto">
+          </div>
+          <div>
+            <label for="showMarkers">Show markers</label>
+            <select id="showMarkers">
+              <option value="false" selected>No</option>
+              <option value="true">Yes</option>
+            </select>
+          </div>
+          <div>
+            <label for="guideLineType">Guide line</label>
+            <select id="guideLineType">
+              <option value="none" selected>None</option>
+              <option value="horizontal">Horizontal</option>
+              <option value="vertical">Vertical</option>
+            </select>
+          </div>
+          <div>
+            <label for="guideLineValue">Guide line value</label>
+            <input id="guideLineValue" type="number" step="any" placeholder="value">
+          </div>
+          <div>
+            <label for="guideLineLabel">Guide line label</label>
+            <input id="guideLineLabel" type="text" placeholder="Label text">
+          </div>
+          <div>
+            <label for="trackSmooth">Track smooth max</label>
+            <select id="trackSmooth">
+              <option value="false" selected>No</option>
+              <option value="true">Yes</option>
+            </select>
           </div>
         </div>
       </div>
@@ -278,6 +316,7 @@
       <div class="canvas-wrap"><canvas id="raw-canvas" width="1440" height="760"></canvas></div>
       <div class="canvas-wrap"><canvas id="smooth-canvas" width="1440" height="760"></canvas></div>
       <div class="downloads" id="downloads"></div>
+      <div id="track-summary" style="padding:14px 16px; border-top:1px solid var(--line); display:none; color:var(--ink);"></div>
     </section>
     <section class="result" id="table-section" style="display:none">
       <h2>Preview of calculated data</h2>
@@ -322,14 +361,29 @@
       return value;
     }
 
-    function niceTicks(vmin, vmax, count = 6) {
+    function parseOptionalNumber(value) {
+      if (value === undefined || value === null || value === "") return undefined;
+      const num = Number(value);
+      return Number.isFinite(num) ? num : undefined;
+    }
+
+    function parseBoolean(value) {
+      return String(value) === 'true';
+    }
+
+    function niceTicks(vmin, vmax, count = 6, interval) {
       if (Math.abs(vmax - vmin) < 1e-14) return [vmin];
-      const rawStep = (vmax - vmin) / Math.max(1, count - 1);
-      const magnitude = Math.pow(10, Math.floor(Math.log10(Math.abs(rawStep))));
-      const residual = rawStep / magnitude;
-      const step = residual >= 5 ? 5 * magnitude : residual >= 2 ? 2 * magnitude : magnitude;
+      let step;
+      if (interval && Number.isFinite(interval) && interval > 0) {
+        step = interval;
+      } else {
+        const rawStep = (vmax - vmin) / Math.max(1, count - 1);
+        const magnitude = Math.pow(10, Math.floor(Math.log10(Math.abs(rawStep))));
+        const residual = rawStep / magnitude;
+        step = residual >= 5 ? 5 * magnitude : residual >= 2 ? 2 * magnitude : magnitude;
+      }
       const ticks = [];
-      let value = Math.floor(vmin / step) * step;
+      let value = Math.round(Math.floor(vmin / step) * step * 1e12) / 1e12;
       while (value <= vmax + 0.5 * step) {
         if (value >= vmin - 0.5 * step) ticks.push(value);
         value += step;
@@ -523,7 +577,9 @@
       ctx.font = "13px Arial";
       const xDivisions = (plotOptions.xDivisions && Number(plotOptions.xDivisions) > 1) ? Number(plotOptions.xDivisions) : 7;
       const yDivisions = (plotOptions.yDivisions && Number(plotOptions.yDivisions) > 1) ? Number(plotOptions.yDivisions) : 7;
-      for (const tick of niceTicks(xmin, xmax, xDivisions)) {
+      const xTickInterval = parseOptionalNumber(plotOptions.xTickInterval);
+      const yTickInterval = parseOptionalNumber(plotOptions.yTickInterval);
+      for (const tick of niceTicks(xmin, xmax, xDivisions, xTickInterval)) {
         const x = xp(tick);
         ctx.beginPath();
         ctx.moveTo(x, top);
@@ -531,7 +587,7 @@
         ctx.stroke();
         ctx.fillText(tick.toFixed(4), x - 32, top + plotH + 28);
       }
-      for (const tick of niceTicks(ymin, ymax, yDivisions)) {
+      for (const tick of niceTicks(ymin, ymax, yDivisions, yTickInterval)) {
         const y = yp(tick);
         ctx.beginPath();
         ctx.moveTo(left, y);
@@ -541,6 +597,18 @@
       }
       const palette = (plotOptions.colorPalette && Array.isArray(plotOptions.colorPalette)) ? plotOptions.colorPalette : colors;
       const lineW = (plotOptions.lineWidth && Number(plotOptions.lineWidth) > 0) ? Number(plotOptions.lineWidth) : 2.8;
+      const showMarkers = plotOptions.showMarkers === true;
+      const guideType = plotOptions.guideLineType || 'none';
+      const guideValue = parseOptionalNumber(plotOptions.guideLineValue);
+      const guideLabel = plotOptions.guideLineLabel ? String(plotOptions.guideLineLabel) : undefined;
+      let trackResult;
+      if (plotOptions.trackSmooth && yKey === 'heat_flux_savgol_w_cm2') {
+        const allSmoothValues = datasets.flatMap(set => set.data.map(row => ({ x: row.time_s, y: row[yKey] })));
+        if (allSmoothValues.length) {
+          const maxEntry = allSmoothValues.reduce((best, current) => current.y > best.y ? current : best, allSmoothValues[0]);
+          trackResult = { x: maxEntry.x, y: maxEntry.y };
+        }
+      }
       datasets.forEach((set, index) => {
         ctx.strokeStyle = palette[index % palette.length];
         ctx.lineWidth = lineW;
@@ -550,6 +618,12 @@
           const y = yp(row[yKey]);
           if (i === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
+          if (showMarkers) {
+            ctx.fillStyle = ctx.strokeStyle;
+            ctx.beginPath();
+            ctx.arc(x, y, Math.max(2, lineW), 0, Math.PI * 2);
+            ctx.fill();
+          }
         });
         ctx.stroke();
         const legendY = top + 10 + index * 24;
@@ -561,10 +635,52 @@
         ctx.font = "13px Arial";
         ctx.fillText(set.name.slice(0, 32), width - right + 54, legendY + 4);
       });
+      if (guideType !== 'none' && Number.isFinite(guideValue)) {
+        ctx.save();
+        ctx.strokeStyle = '#cc2f1d';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 4]);
+        if (guideType === 'horizontal') {
+          const y = yp(guideValue);
+          ctx.beginPath();
+          ctx.moveTo(left, y);
+          ctx.lineTo(left + plotW, y);
+          ctx.stroke();
+          ctx.fillStyle = '#cc2f1d';
+          ctx.font = '13px Arial';
+          if (guideLabel) ctx.fillText(guideLabel, left + 8, y - 8);
+        } else if (guideType === 'vertical') {
+          const x = xp(guideValue);
+          ctx.beginPath();
+          ctx.moveTo(x, top);
+          ctx.lineTo(x, top + plotH);
+          ctx.stroke();
+          ctx.fillStyle = '#cc2f1d';
+          ctx.font = '13px Arial';
+          if (guideLabel) ctx.fillText(guideLabel, x + 8, top + 18);
+        }
+        ctx.restore();
+      }
+      if (trackResult) {
+        const y = yp(trackResult.y);
+        ctx.save();
+        ctx.strokeStyle = '#1f6f8b';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(left + plotW, y);
+        ctx.stroke();
+        ctx.fillStyle = '#1f6f8b';
+        ctx.font = '14px Arial';
+        ctx.fillText(`Smooth max: ${trackResult.y.toPrecision(6)} at ${trackResult.x.toPrecision(6)} s`, left + 8, y - 10);
+        ctx.restore();
+      }
       ctx.fillStyle = "#172026";
       ctx.font = "14px Arial";
       ctx.fillText("Time (s)", left + plotW / 2 - 28, height - 34);
       ctx.fillText("Heat flux (W/cm^2)", 22, 42);
+      return trackResult;
     }
 
     function csvForDataset(dataset) {
@@ -633,12 +749,19 @@
         const plotOptions = {
           xDivisions: Number(document.getElementById('xDivisions').value || 7),
           yDivisions: Number(document.getElementById('yDivisions').value || 7),
-          xmin: (() => { const v = document.getElementById('xMin').value; return v === '' ? undefined : Number(v); })(),
-          xmax: (() => { const v = document.getElementById('xMax').value; return v === '' ? undefined : Number(v); })(),
-          ymin: (() => { const v = document.getElementById('yMin').value; return v === '' ? undefined : Number(v); })(),
-          ymax: (() => { const v = document.getElementById('yMax').value; return v === '' ? undefined : Number(v); })(),
+          xTickInterval: parseOptionalNumber(document.getElementById('xTickInterval').value),
+          yTickInterval: parseOptionalNumber(document.getElementById('yTickInterval').value),
+          xmin: parseOptionalNumber(document.getElementById('xMin').value),
+          xmax: parseOptionalNumber(document.getElementById('xMax').value),
+          ymin: parseOptionalNumber(document.getElementById('yMin').value),
+          ymax: parseOptionalNumber(document.getElementById('yMax').value),
           colorPalette: palettes[document.getElementById('colorScheme').value] || palettes.default,
-          lineWidth: Number(document.getElementById('lineWidth').value || 2.8)
+          lineWidth: Number(document.getElementById('lineWidth').value || 2.8),
+          showMarkers: parseBoolean(document.getElementById('showMarkers').value),
+          guideLineType: document.getElementById('guideLineType').value,
+          guideLineValue: parseOptionalNumber(document.getElementById('guideLineValue').value),
+          guideLineLabel: document.getElementById('guideLineLabel').value,
+          trackSmooth: parseBoolean(document.getElementById('trackSmooth').value)
         };
         const all = [];
         for (const file of files) {
@@ -648,7 +771,15 @@
         const rawCanvas = document.getElementById("raw-canvas");
         const smoothCanvas = document.getElementById("smooth-canvas");
         drawPlot(rawCanvas, all, "heat_flux_w_cm2", "Combined Raw Heat Flux vs Time", plotOptions);
-        drawPlot(smoothCanvas, all, "heat_flux_savgol_w_cm2", `Combined Savitzky-Golay Heat Flux vs Time (${settings.smoothWindow} points)`, plotOptions);
+        const smoothMetrics = drawPlot(smoothCanvas, all, "heat_flux_savgol_w_cm2", `Combined Savitzky-Golay Heat Flux vs Time (${settings.smoothWindow} points)`, plotOptions);
+        const trackSummary = document.getElementById('track-summary');
+        if (plotOptions.trackSmooth && smoothMetrics) {
+          trackSummary.style.display = 'block';
+          trackSummary.textContent = `Tracked smooth maximum: ${smoothMetrics.y.toPrecision(6)} W/cm^2 at ${smoothMetrics.x.toPrecision(6)} s`;
+        } else {
+          trackSummary.style.display = 'none';
+          trackSummary.textContent = '';
+        }
         const downloads = document.getElementById("downloads");
         downloads.innerHTML = "";
         downloads.appendChild(canvasDownloadLink(rawCanvas, "combined_heat_flux_raw.png"));
