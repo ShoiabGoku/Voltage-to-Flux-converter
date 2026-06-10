@@ -3,346 +3,699 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- SEO: primary -->
+  <title>Voltage to Heat Flux Converter | Cook-Felderman Online Tool</title>
+  <meta name="description" content="Free online tool that converts voltage vs. time data into heat flux (W/cm²) using the Cook-Felderman method with Savitzky-Golay smoothing. Upload Excel or CSV files, visualise results instantly — no server, no sign-up.">
+  <meta name="keywords" content="voltage to heat flux converter, Cook-Felderman, heat flux calculation, Savitzky-Golay smoothing, transient heat flux, gauge voltage conversion, W/cm2, heat transfer tool">
+  <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://shoiabgoku.github.io/Voltage-to-Flux-converter/">
+
+  <!-- Open Graph (for social sharing and Google rich previews) -->
+  <meta property="og:type" content="website">
   <meta property="og:url" content="https://shoiabgoku.github.io/Voltage-to-Flux-converter/">
-  <title>Voltage to Heat Flux Converter</title>
+  <meta property="og:title" content="Voltage to Heat Flux Converter — Cook-Felderman Method">
+  <meta property="og:description" content="Convert voltage–time data to heat flux (W/cm²) instantly in your browser. Uses Cook-Felderman reduction with Savitzky-Golay smoothing. Free, private, no upload.">
+  <meta property="og:image" content="https://shoiabgoku.github.io/Voltage-to-Flux-converter/og-preview.png">
+
+  <!-- Twitter card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Voltage to Heat Flux Converter — Cook-Felderman Method">
+  <meta name="twitter:description" content="Free browser-based tool: upload Excel/CSV voltage data, get instant heat flux graphs and downloadable CSV results.">
+
+  <!-- Structured data: SoftwareApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Voltage to Heat Flux Converter",
+    "applicationCategory": "ScientificApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "url": "https://shoiabgoku.github.io/Voltage-to-Flux-converter/",
+    "description": "Convert voltage vs. time measurements to heat flux using the Cook-Felderman method with optional Savitzky-Golay smoothing. Runs entirely in the browser.",
+    "featureList": [
+      "Cook-Felderman heat flux reduction",
+      "Savitzky-Golay smoothing",
+      "Excel and CSV file support",
+      "Multi-dataset overlay plots",
+      "PNG and CSV download",
+      "No data upload — fully private"
+    ]
+  }
+  </script>
+
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <style>
+    /* ── Design tokens ── */
     :root {
-      --ink: #172026;
-      --muted: #63717c;
-      --line: #d6dee5;
-      --panel: #f7f9fb;
-      --accent: #1f6f8b;
-      --smooth: #b4412d;
+      --bg: #f0f4f8;
+      --surface: #ffffff;
+      --border: #d1dbe5;
+      --ink: #0f1f2c;
+      --ink-soft: #4a5a68;
+      --accent: #0d6e9e;
+      --accent-dark: #095880;
+      --accent-light: #e6f4fb;
+      --warm: #c0432b;
+      --success: #1e8a4a;
+      --radius: 10px;
+      --shadow: 0 2px 12px rgba(13,110,158,.10);
+      --shadow-lg: 0 8px 32px rgba(13,110,158,.14);
+      --font: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
     }
-    * { box-sizing: border-box; }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: var(--font);
+      background: var(--bg);
       color: var(--ink);
-      background: #fff;
+      line-height: 1.6;
     }
-    header {
-      border-bottom: 1px solid var(--line);
-      padding: 18px 28px;
+
+    /* ── Nav ── */
+    .nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
       display: flex;
-      align-items: baseline;
+      align-items: center;
       justify-content: space-between;
-      gap: 18px;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 6px rgba(0,0,0,.06);
     }
-    h1 {
-      margin: 0;
-      font-size: 23px;
-      letter-spacing: 0;
+    .nav-brand {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: -.2px;
     }
-    header span {
-      color: var(--muted);
-      font-size: 14px;
+    .nav-cta {
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 18px;
+      border-radius: 6px;
+      transition: background .15s;
     }
-    main {
-      max-width: 1220px;
-      margin: 0 auto;
-      padding: 24px;
+    .nav-cta:hover { background: var(--accent-dark); }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, #0a4a6e 0%, #0d6e9e 55%, #0e90c8 100%);
+      color: #fff;
+      text-align: center;
+      padding: 72px 24px 80px;
     }
-    form {
-      border: 1px solid var(--line);
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      margin-bottom: 22px;
+    }
+    .hero h1 {
+      font-size: clamp(26px, 5vw, 46px);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -.5px;
+      max-width: 780px;
+      margin: 0 auto 16px;
+    }
+    .hero h1 span { color: #7dd8f8; }
+    .hero p {
+      font-size: clamp(15px, 2.5vw, 18px);
+      opacity: .88;
+      max-width: 600px;
+      margin: 0 auto 36px;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      background: #fff;
+      color: var(--accent-dark);
+      font-weight: 800;
+      font-size: 15px;
+      padding: 14px 32px;
       border-radius: 8px;
-      padding: 20px;
-      background: var(--panel);
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: transform .12s, box-shadow .12s;
+      box-shadow: 0 4px 18px rgba(0,0,0,.18);
     }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,.22); }
+    .btn-outline {
+      background: transparent;
+      color: #fff;
+      border: 2px solid rgba(255,255,255,.6);
+      font-weight: 700;
+      font-size: 15px;
+      padding: 12px 28px;
+      border-radius: 8px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .btn-outline:hover { border-color: #fff; background: rgba(255,255,255,.1); }
+
+    /* ── Why section ── */
+    .why {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 64px 24px 0;
+    }
+    .section-label {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      text-align: center;
+      font-size: clamp(20px, 3.5vw, 30px);
+      font-weight: 800;
+      letter-spacing: -.3px;
+      margin-bottom: 40px;
+      color: var(--ink);
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      box-shadow: var(--shadow);
+    }
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--accent-light);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      font-size: 20px;
+    }
+    .feature-card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .feature-card p {
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      line-height: 1.55;
+    }
+
+    /* ── Converter wrapper ── */
+    .converter-section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 64px 24px 48px;
+    }
+    .converter-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+    .card-header {
+      background: linear-gradient(90deg, var(--accent) 0%, #1086bb 100%);
+      color: #fff;
+      padding: 20px 28px;
+    }
+    .card-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .card-header p {
+      font-size: 13px;
+      opacity: .82;
+    }
+    .card-body { padding: 28px; }
+
+    /* ── Form ── */
     .grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 16px;
+      gap: 18px;
     }
     .span-3 { grid-column: span 3; }
     label {
       display: block;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 700;
       margin-bottom: 6px;
+      color: var(--ink);
+      letter-spacing: .1px;
     }
     input, select {
       width: 100%;
-      border: 1px solid #b9c3cb;
-      border-radius: 6px;
-      padding: 10px 11px;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      padding: 10px 12px;
       font-size: 14px;
+      font-family: var(--font);
       background: #fff;
+      color: var(--ink);
+      transition: border-color .15s, box-shadow .15s;
+      outline: none;
+    }
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(13,110,158,.12);
     }
     input[type="file"] { padding: 8px; }
+    .hint {
+      color: var(--ink-soft);
+      font-size: 12.5px;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    /* ── Advanced toggle ── */
     .advanced-toggle {
       background: transparent;
       color: var(--accent);
-      border: 1px dashed var(--line);
-      padding: 8px 12px;
-      border-radius: 6px;
+      border: 1.5px dashed var(--border);
+      padding: 8px 14px;
+      border-radius: 7px;
       cursor: pointer;
       font-weight: 700;
+      font-size: 13px;
+      font-family: var(--font);
+      transition: background .12s;
     }
+    .advanced-toggle:hover { background: var(--accent-light); }
     .advanced-panel {
-      margin-top: 12px;
-      padding: 12px;
-      border: 1px solid #e6eef3;
-      border-radius: 8px;
-      background: #f8fbfc;
+      margin-top: 14px;
+      padding: 16px;
+      border: 1px solid #dce8f0;
+      border-radius: 9px;
+      background: #f5fafd;
       display: none;
     }
-    .advanced-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    @media (max-width: 760px) { .advanced-grid { grid-template-columns: 1fr; } }
-    .hint {
-      color: var(--muted);
-      font-size: 13px;
-      margin-top: 6px;
-      line-height: 1.4;
-    }
+    .advanced-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    @media (max-width: 760px) { .advanced-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 480px) { .advanced-grid { grid-template-columns: 1fr; } }
+
+    /* ── Actions ── */
     .actions {
-      margin-top: 18px;
+      margin-top: 22px;
       display: flex;
       justify-content: flex-end;
-      gap: 10px;
+      gap: 12px;
       flex-wrap: wrap;
     }
-    button, a.button {
+    button.submit-btn {
       border: 0;
-      border-radius: 6px;
-      padding: 11px 16px;
+      border-radius: 8px;
+      padding: 12px 28px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 800;
+      font-size: 15px;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: background .15s, transform .1s;
+      box-shadow: 0 3px 12px rgba(13,110,158,.25);
+    }
+    button.submit-btn:hover { background: var(--accent-dark); transform: translateY(-1px); }
+
+    /* ── Download / secondary buttons ── */
+    a.button {
+      display: inline-block;
+      border: 0;
+      border-radius: 7px;
+      padding: 10px 16px;
       background: var(--accent);
       color: #fff;
       font-weight: 700;
+      font-size: 13px;
       text-decoration: none;
       cursor: pointer;
+    }
+    a.secondary { background: #596773; }
+
+    /* ── Message ── */
+    .message {
+      margin-top: 18px;
+      border: 1.5px solid #e0b066;
+      background: #fff9ed;
+      color: #6d4311;
+      padding: 12px 16px;
+      border-radius: 8px;
+      display: none;
       font-size: 14px;
     }
-    button.secondary, a.secondary {
-      background: #596773;
-    }
+
+    /* ── Result sections ── */
     .result {
       margin-top: 24px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
       overflow: hidden;
+      background: var(--surface);
+      box-shadow: var(--shadow);
     }
     .result h2 {
       margin: 0;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--line);
-      font-size: 17px;
-      background: #fbfcfd;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 16px;
+      font-weight: 700;
+      background: #f8fbfd;
+      color: var(--ink);
     }
-    .canvas-wrap {
-      padding: 16px;
-      overflow-x: auto;
-    }
+    .canvas-wrap { padding: 16px; overflow-x: auto; }
     canvas {
       width: 100%;
       min-width: 760px;
-      border: 1px solid var(--line);
+      border: 1px solid var(--border);
       background: #fff;
       display: block;
+      border-radius: 6px;
     }
     .downloads {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      padding: 14px 16px;
-      border-top: 1px solid var(--line);
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
     }
     table {
-      width: calc(100% - 32px);
-      margin: 0 16px 16px;
+      width: calc(100% - 40px);
+      margin: 0 20px 20px;
       border-collapse: collapse;
       font-size: 13px;
     }
     th, td {
-      border-bottom: 1px solid var(--line);
-      padding: 8px;
+      border-bottom: 1px solid var(--border);
+      padding: 9px 10px;
       text-align: right;
     }
+    th { background: #f5f8fb; font-weight: 700; font-size: 12px; letter-spacing: .2px; }
     th:first-child, td:first-child { text-align: left; }
-    .message {
-      margin-top: 16px;
-      border: 1px solid #e0b066;
-      background: #fff9ed;
-      color: #6d4311;
-      padding: 12px 14px;
-      border-radius: 8px;
-      display: none;
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 40px 24px 32px;
+      font-size: 13px;
+      color: var(--ink-soft);
+      border-top: 1px solid var(--border);
+      margin-top: 48px;
+      background: var(--surface);
     }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Mobile ── */
     @media (max-width: 760px) {
-      header { flex-direction: column; align-items: flex-start; }
+      .nav-brand { font-size: 13px; }
       .grid { grid-template-columns: 1fr; }
       .span-3 { grid-column: span 1; }
+      .hero { padding: 52px 20px 60px; }
+      .card-body { padding: 20px; }
+      .why, .converter-section { padding-left: 16px; padding-right: 16px; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Voltage to Heat Flux Converter</h1>
-    <span>Cook-Felderman reduction with Savitzky-Golay smoothing</span>
-  </header>
-  <main>
-    <form id="converter-form">
-      <div class="grid">
-        <div class="span-3">
-          <label for="files">Voltage vs time Excel files</label>
-          <input id="files" type="file" accept=".xlsx,.xls,.csv" multiple required>
-          <div class="hint">Each file or sheet should contain time in the first numeric column and voltage in the second numeric column. Files are processed in your browser and are not uploaded to a server.</div>
-        </div>
-        <div>
-          <label for="voltageMode">Voltage conversion</label>
-          <select id="voltageMode">
-            <option value="divide" selected>Input is Voltage x 350, use value / gain</option>
-            <option value="multiply">Multiply input by gain</option>
-            <option value="none">Use input voltage directly</option>
-          </select>
-        </div>
-        <div>
-          <label for="gain">Gain</label>
-          <input id="gain" type="number" step="any" value="350">
-        </div>
-        <div>
-          <label for="baselinePoints">Baseline points</label>
-          <input id="baselinePoints" type="number" min="1" value="20">
-        </div>
-        <div>
-          <label for="smoothWindow">Savitzky-Golay window points</label>
-          <input id="smoothWindow" type="number" min="3" max="15" step="2" value="15">
-        </div>
-        <div>
-          <label for="smoothPolyorder">Polynomial order</label>
-          <input id="smoothPolyorder" type="number" min="1" value="3">
-        </div>
-        <div>
-          <label for="beta">Beta</label>
-          <input id="beta" type="number" step="any" value="10040">
-        </div>
-        <div>
-          <label for="sensitivity">Sensitivity, V/K</label>
-          <input id="sensitivity" type="number" step="any" value="4.35e-5">
-        </div>
-      </div>
-      <div style="margin-top:12px; display:flex; gap:10px; align-items:center;">
-        <button type="button" id="advanced-toggle" class="advanced-toggle">Advanced options</button>
-      </div>
-      <div id="advanced-panel" class="advanced-panel">
-        <div class="advanced-grid">
-          <div>
-            <label for="xDivisions">X axis divisions</label>
-            <input id="xDivisions" type="number" min="2" value="7">
-          </div>
-          <div>
-            <label for="yDivisions">Y axis divisions</label>
-            <input id="yDivisions" type="number" min="2" value="7">
-          </div>
-          <div>
-            <label for="xMin">X axis min (optional)</label>
-            <input id="xMin" type="number" step="any" placeholder="auto">
-          </div>
-          <div>
-            <label for="xMax">X axis max (optional)</label>
-            <input id="xMax" type="number" step="any" placeholder="auto">
-          </div>
-          <div>
-            <label for="yMin">Y axis min (optional)</label>
-            <input id="yMin" type="number" step="any" placeholder="auto">
-          </div>
-          <div>
-            <label for="yMax">Y axis max (optional)</label>
-            <input id="yMax" type="number" step="any" placeholder="auto">
-          </div>
-          <div>
-            <label for="colorScheme">Color scheme</label>
-            <select id="colorScheme">
-              <option value="default" selected>Default</option>
-              <option value="warm">Warm</option>
-              <option value="cool">Cool</option>
-              <option value="mono">Grayscale</option>
-            </select>
-          </div>
-          <div>
-            <label for="lineWidth">Line width</label>
-            <input id="lineWidth" type="number" min="1" max="10" step="0.1" value="2.8">
-          </div>
-          <div>
-            <label for="xTickInterval">X tick interval (optional)</label>
-            <input id="xTickInterval" type="number" step="any" placeholder="auto">
-          </div>
-          <div>
-            <label for="yTickInterval">Y tick interval (optional)</label>
-            <input id="yTickInterval" type="number" step="any" placeholder="auto">
-          </div>
-          <div>
-            <label for="showMarkers">Show markers</label>
-            <select id="showMarkers">
-              <option value="false" selected>No</option>
-              <option value="true">Yes</option>
-            </select>
-          </div>
-          <div>
-            <label for="guideLineType">Guide line</label>
-            <select id="guideLineType">
-              <option value="none" selected>None</option>
-              <option value="horizontal">Horizontal</option>
-              <option value="vertical">Vertical</option>
-            </select>
-          </div>
-          <div>
-            <label for="guideLineValue">Guide line value</label>
-            <input id="guideLineValue" type="number" step="any" placeholder="value">
-          </div>
-          <div>
-            <label for="guideLineLabel">Guide line label</label>
-            <input id="guideLineLabel" type="text" placeholder="Label text">
-          </div>
-          <div>
-            <label for="trackSmooth">Track smooth max</label>
-            <select id="trackSmooth">
-              <option value="false" selected>No</option>
-              <option value="true">Yes</option>
-            </select>
-          </div>
-        </div>
-      </div>
 
-      <div class="actions">
-        <button type="submit">Generate Heat Flux Graphs</button>
+  <!-- ── Nav ── -->
+  <nav class="nav" aria-label="Site navigation">
+    <a href="#converter" class="nav-brand">&#9889; Voltage &rarr; Heat Flux</a>
+    <a href="#converter" class="nav-cta">Use the Tool &darr;</a>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="hero" aria-labelledby="hero-heading">
+    <div class="hero-badge">Free &bull; Browser-based &bull; No sign-up</div>
+    <h1 id="hero-heading">
+      Convert Voltage to <span>Heat Flux</span><br>in Seconds
+    </h1>
+    <p>
+      Upload your voltage–time data and instantly get calibrated heat flux curves
+      using the Cook-Felderman method with Savitzky-Golay smoothing.
+      All computation runs in your browser — your data never leaves your machine.
+    </p>
+    <div class="hero-buttons">
+      <a href="#converter" class="btn-primary">Start Converting &darr;</a>
+      <a href="https://github.com/ShoiabGoku/Voltage-to-Flux-converter" target="_blank" rel="noopener" class="btn-outline">View on GitHub</a>
+    </div>
+  </section>
+
+  <!-- ── Why section ── -->
+  <section class="why" aria-labelledby="why-heading">
+    <p class="section-label">Why use this tool</p>
+    <h2 class="section-title" id="why-heading">Everything you need for heat flux analysis</h2>
+    <div class="features">
+      <div class="feature-card">
+        <div class="feature-icon">&#128200;</div>
+        <h3>Cook-Felderman Reduction</h3>
+        <p>Implements the industry-standard semi-infinite body method to recover surface heat flux from thermocouple or gauge voltage signals.</p>
       </div>
-    </form>
-    <div id="message" class="message"></div>
-    <section class="result" id="combined-section" style="display:none">
-      <h2>Combined heat flux comparison</h2>
-      <div class="canvas-wrap"><canvas id="raw-canvas" width="1440" height="760"></canvas></div>
-      <div class="canvas-wrap"><canvas id="smooth-canvas" width="1440" height="760"></canvas></div>
-      <div class="downloads" id="downloads"></div>
-      <div id="track-summary" style="padding:14px 16px; border-top:1px solid var(--line); display:none; color:var(--ink);"></div>
-    </section>
-    <section class="result" id="table-section" style="display:none">
-      <h2>Preview of calculated data</h2>
-      <div id="tables"></div>
-    </section>
-  </main>
+      <div class="feature-card">
+        <div class="feature-icon">&#128292;</div>
+        <h3>Savitzky-Golay Smoothing</h3>
+        <p>Automatically applies polynomial smoothing to reduce noise while preserving peak shape — configurable window and polynomial order.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128196;</div>
+        <h3>Excel &amp; CSV Support</h3>
+        <p>Upload .xlsx, .xls, or .csv files with multiple sheets. Each sheet is processed as a separate dataset and overlaid on the same chart.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128274;</div>
+        <h3>100% Private</h3>
+        <p>No server, no account. Your experimental data is processed entirely in your browser and never uploaded anywhere.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128190;</div>
+        <h3>Download Results</h3>
+        <p>Export publication-ready PNG plots and CSV files with raw and smoothed heat flux values for every dataset in one click.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9881;&#65039;</div>
+        <h3>Advanced Controls</h3>
+        <p>Fine-tune axis limits, tick spacing, guide lines, colour schemes, and track the smooth peak maximum — all without writing code.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Converter ── -->
+  <section class="converter-section" id="converter" aria-labelledby="converter-heading">
+    <div class="converter-card">
+      <div class="card-header">
+        <h2 id="converter-heading">Heat Flux Converter</h2>
+        <p>Cook-Felderman reduction &bull; Savitzky-Golay smoothing &bull; results in W/cm&sup2;</p>
+      </div>
+      <div class="card-body">
+        <form id="converter-form" novalidate>
+          <div class="grid">
+            <div class="span-3">
+              <label for="files">Voltage vs time Excel / CSV files</label>
+              <input id="files" type="file" accept=".xlsx,.xls,.csv" multiple required>
+              <p class="hint">Each file or sheet must contain time in the first numeric column and voltage in the second. Files are processed locally — never uploaded.</p>
+            </div>
+            <div>
+              <label for="voltageMode">Voltage conversion</label>
+              <select id="voltageMode">
+                <option value="divide" selected>Input is Voltage &times; gain &rarr; divide by gain</option>
+                <option value="multiply">Multiply input by gain</option>
+                <option value="none">Use input voltage directly</option>
+              </select>
+            </div>
+            <div>
+              <label for="gain">Gain</label>
+              <input id="gain" type="number" step="any" value="350">
+            </div>
+            <div>
+              <label for="baselinePoints">Baseline points</label>
+              <input id="baselinePoints" type="number" min="1" value="20">
+            </div>
+            <div>
+              <label for="smoothWindow">Savitzky-Golay window points</label>
+              <input id="smoothWindow" type="number" min="3" max="15" step="2" value="15">
+            </div>
+            <div>
+              <label for="smoothPolyorder">Polynomial order</label>
+              <input id="smoothPolyorder" type="number" min="1" value="3">
+            </div>
+            <div>
+              <label for="beta">Beta (&beta;)</label>
+              <input id="beta" type="number" step="any" value="10040">
+            </div>
+            <div>
+              <label for="sensitivity">Sensitivity (V/K)</label>
+              <input id="sensitivity" type="number" step="any" value="4.35e-5">
+            </div>
+          </div>
+
+          <div style="margin-top:16px; display:flex; gap:10px; align-items:center;">
+            <button type="button" id="advanced-toggle" class="advanced-toggle">&#9881; Advanced options</button>
+          </div>
+
+          <div id="advanced-panel" class="advanced-panel">
+            <div class="advanced-grid">
+              <div>
+                <label for="xDivisions">X axis divisions</label>
+                <input id="xDivisions" type="number" min="2" value="7">
+              </div>
+              <div>
+                <label for="yDivisions">Y axis divisions</label>
+                <input id="yDivisions" type="number" min="2" value="7">
+              </div>
+              <div>
+                <label for="xMin">X axis min</label>
+                <input id="xMin" type="number" step="any" placeholder="auto">
+              </div>
+              <div>
+                <label for="xMax">X axis max</label>
+                <input id="xMax" type="number" step="any" placeholder="auto">
+              </div>
+              <div>
+                <label for="yMin">Y axis min</label>
+                <input id="yMin" type="number" step="any" placeholder="auto">
+              </div>
+              <div>
+                <label for="yMax">Y axis max</label>
+                <input id="yMax" type="number" step="any" placeholder="auto">
+              </div>
+              <div>
+                <label for="colorScheme">Color scheme</label>
+                <select id="colorScheme">
+                  <option value="default" selected>Default</option>
+                  <option value="warm">Warm</option>
+                  <option value="cool">Cool</option>
+                  <option value="mono">Grayscale</option>
+                </select>
+              </div>
+              <div>
+                <label for="lineWidth">Line width</label>
+                <input id="lineWidth" type="number" min="1" max="10" step="0.1" value="2.8">
+              </div>
+              <div>
+                <label for="xTickInterval">X tick interval</label>
+                <input id="xTickInterval" type="number" step="any" placeholder="auto">
+              </div>
+              <div>
+                <label for="yTickInterval">Y tick interval</label>
+                <input id="yTickInterval" type="number" step="any" placeholder="auto">
+              </div>
+              <div>
+                <label for="showMarkers">Show markers</label>
+                <select id="showMarkers">
+                  <option value="false" selected>No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </div>
+              <div>
+                <label for="guideLineType">Guide line</label>
+                <select id="guideLineType">
+                  <option value="none" selected>None</option>
+                  <option value="horizontal">Horizontal</option>
+                  <option value="vertical">Vertical</option>
+                </select>
+              </div>
+              <div>
+                <label for="guideLineValue">Guide line value</label>
+                <input id="guideLineValue" type="number" step="any" placeholder="value">
+              </div>
+              <div>
+                <label for="guideLineLabel">Guide line label</label>
+                <input id="guideLineLabel" type="text" placeholder="Label text">
+              </div>
+              <div>
+                <label for="trackSmooth">Track smooth max</label>
+                <select id="trackSmooth">
+                  <option value="false" selected>No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="submit-btn">&#9889; Generate Heat Flux Graphs</button>
+          </div>
+        </form>
+
+        <div id="message" class="message" role="alert"></div>
+
+        <section class="result" id="combined-section" style="display:none" aria-label="Combined heat flux plots">
+          <h2>Combined heat flux comparison</h2>
+          <div class="canvas-wrap"><canvas id="raw-canvas" width="1440" height="760" aria-label="Raw heat flux plot"></canvas></div>
+          <div class="canvas-wrap"><canvas id="smooth-canvas" width="1440" height="760" aria-label="Smoothed heat flux plot"></canvas></div>
+          <div class="downloads" id="downloads"></div>
+          <div id="track-summary" style="padding:14px 20px; border-top:1px solid var(--border); display:none; color:var(--ink); font-size:14px; font-weight:600;"></div>
+        </section>
+
+        <section class="result" id="table-section" style="display:none" aria-label="Data preview table">
+          <h2>Preview of calculated data</h2>
+          <div id="tables"></div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <p>
+      <strong>Voltage to Heat Flux Converter</strong> &mdash;
+      Cook-Felderman method &bull; Savitzky-Golay smoothing &bull;
+      All calculations run in your browser &bull;
+      <a href="https://github.com/ShoiabGoku/Voltage-to-Flux-converter" target="_blank" rel="noopener">GitHub</a>
+    </p>
+    <p style="margin-top:8px; font-size:12px; opacity:.7;">No data is uploaded. No account required. Free to use.</p>
+  </footer>
 
   <script>
-    const MICRO = 1e-6;
-    const colors = ["#1f6f8b", "#b4412d", "#487f45", "#804f97", "#bd7e24", "#3460a0", "#8d4c3b", "#54867d"];
+    const colors = ["#0d6e9e","#c0432b","#2e8b4a","#7c42b0","#c97d1a","#2a559e","#7a3e2f","#3d7a72"];
     const palettes = {
       default: colors,
-      warm: ["#b4412d", "#bd7e24", "#8d4c3b", "#8d4c3b"],
-      cool: ["#1f6f8b", "#3460a0", "#54867d", "#487f45"],
-      mono: ["#111", "#333", "#666", "#999"]
+      warm: ["#c0432b","#c97d1a","#7a3e2f","#a34520"],
+      cool: ["#0d6e9e","#2a559e","#3d7a72","#2e8b4a"],
+      mono: ["#111","#333","#666","#999"]
     };
 
-    // Advanced panel toggle
     document.addEventListener('DOMContentLoaded', () => {
       const toggle = document.getElementById('advanced-toggle');
       const panel = document.getElementById('advanced-panel');
-      if (toggle && panel) {
-        toggle.addEventListener('click', () => {
-          panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-        });
-      }
+      toggle.addEventListener('click', () => {
+        const open = panel.style.display === 'block';
+        panel.style.display = open ? 'none' : 'block';
+        toggle.textContent = open ? '⚙ Advanced options' : '⚙ Hide advanced options';
+      });
     });
 
     function showMessage(text) {
@@ -440,12 +793,8 @@
           if (start === 0) stop = Math.min(values.length, window);
           else start = Math.max(0, values.length - window);
         }
-        const x = [];
-        const y = [];
-        for (let i = start; i < stop; i++) {
-          x.push(i - index);
-          y.push(values[i]);
-        }
+        const x = [], y = [];
+        for (let i = start; i < stop; i++) { x.push(i - index); y.push(values[i]); }
         return polynomialFitAtZero(x, y, Math.min(order, y.length - 1));
       });
     }
@@ -458,8 +807,7 @@
       for (const pair of pairs) {
         const last = grouped[grouped.length - 1];
         if (last && Math.abs(last.time - pair[0]) < 1e-15) {
-          last.sum += pair[1];
-          last.count += 1;
+          last.sum += pair[1]; last.count += 1;
         } else {
           grouped.push({ time: pair[0], sum: pair[1], count: 1 });
         }
@@ -472,14 +820,12 @@
       const e = v.map(value => value - baseline);
       const elapsed = t.map(value => value - t[0]);
       const coeff = settings.beta / (Math.sqrt(Math.PI) * settings.sensitivity);
-      const outTime = [];
-      const q = [];
+      const outTime = [], q = [];
       for (let n = 1; n < elapsed.length; n++) {
         const tn = elapsed[n];
         let bracket = e[n] / Math.sqrt(tn);
         for (let i = 1; i < n; i++) {
-          const ti = elapsed[i];
-          const tim1 = elapsed[i - 1];
+          const ti = elapsed[i], tim1 = elapsed[i - 1];
           bracket += (e[n] - e[i]) / Math.sqrt(tn - ti);
           bracket -= (e[n] - e[i - 1]) / Math.sqrt(tn - tim1);
           bracket += 2 * (e[i] - e[i - 1]) / (Math.sqrt(tn - ti) + Math.sqrt(tn - tim1));
@@ -504,10 +850,7 @@
       const usable = numericRows
         .map(row => row.filter(Number.isFinite))
         .filter(row => row.length >= 2);
-      return {
-        time: usable.map(row => row[0]),
-        voltage: usable.map(row => row[1])
-      };
+      return { time: usable.map(row => row[0]), voltage: usable.map(row => row[1]) };
     }
 
     async function readFileDatasets(file, settings) {
@@ -535,64 +878,44 @@
 
     function drawPlot(canvas, datasets, yKey, title, plotOptions = {}) {
       const ctx = canvas.getContext("2d");
-      const width = canvas.width;
-      const height = canvas.height;
-      const left = 120;
-      const right = 230;
-      const top = 70;
-      const bottom = 90;
-      const plotW = width - left - right;
-      const plotH = height - top - bottom;
+      const width = canvas.width, height = canvas.height;
+      const left = 120, right = 230, top = 70, bottom = 90;
+      const plotW = width - left - right, plotH = height - top - bottom;
       ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = "#fff";
       ctx.fillRect(0, 0, width, height);
       const xs = datasets.flatMap(set => set.data.map(row => row.time_s));
       const ys = datasets.flatMap(set => set.data.map(row => row[yKey]));
-      let xmin = Math.min(...xs);
-      let xmax = Math.max(...xs);
-      let ymin = Math.min(...ys);
-      let ymax = Math.max(...ys);
-      // apply optional overrides
+      let xmin = Math.min(...xs), xmax = Math.max(...xs);
+      let ymin = Math.min(...ys), ymax = Math.max(...ys);
       if (typeof plotOptions.xmin === 'number' && isFinite(plotOptions.xmin)) xmin = plotOptions.xmin;
       if (typeof plotOptions.xmax === 'number' && isFinite(plotOptions.xmax)) xmax = plotOptions.xmax;
       if (typeof plotOptions.ymin === 'number' && isFinite(plotOptions.ymin)) ymin = plotOptions.ymin;
       if (typeof plotOptions.ymax === 'number' && isFinite(plotOptions.ymax)) ymax = plotOptions.ymax;
-      // fallback if invalid ranges
       if (!isFinite(xmin) || !isFinite(xmax) || xmin === xmax) { xmin = Math.min(...xs); xmax = Math.max(...xs); }
       if (!isFinite(ymin) || !isFinite(ymax) || ymin === ymax) { ymin = Math.min(...ys); ymax = Math.max(...ys); }
       const ypad = 0.08 * Math.max(1e-12, ymax - ymin);
-      ymin -= ypad;
-      ymax += ypad;
+      ymin -= ypad; ymax += ypad;
       const xp = value => left + (value - xmin) / (xmax - xmin) * plotW;
       const yp = value => top + (ymax - value) / (ymax - ymin) * plotH;
-      ctx.fillStyle = "#172026";
-      ctx.font = "18px Arial";
+      ctx.fillStyle = "#0f1f2c"; ctx.font = "bold 18px Arial";
       ctx.fillText(title, left, 34);
-      ctx.strokeStyle = "#222";
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#222"; ctx.lineWidth = 2;
       ctx.strokeRect(left, top, plotW, plotH);
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = "#dde2e6";
-      ctx.fillStyle = "#2d363d";
-      ctx.font = "13px Arial";
+      ctx.lineWidth = 1; ctx.strokeStyle = "#dde2e6";
+      ctx.fillStyle = "#2d363d"; ctx.font = "13px Arial";
       const xDivisions = (plotOptions.xDivisions && Number(plotOptions.xDivisions) > 1) ? Number(plotOptions.xDivisions) : 7;
       const yDivisions = (plotOptions.yDivisions && Number(plotOptions.yDivisions) > 1) ? Number(plotOptions.yDivisions) : 7;
       const xTickInterval = parseOptionalNumber(plotOptions.xTickInterval);
       const yTickInterval = parseOptionalNumber(plotOptions.yTickInterval);
       for (const tick of niceTicks(xmin, xmax, xDivisions, xTickInterval)) {
         const x = xp(tick);
-        ctx.beginPath();
-        ctx.moveTo(x, top);
-        ctx.lineTo(x, top + plotH);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + plotH); ctx.stroke();
         ctx.fillText(tick.toFixed(4), x - 32, top + plotH + 28);
       }
       for (const tick of niceTicks(ymin, ymax, yDivisions, yTickInterval)) {
         const y = yp(tick);
-        ctx.beginPath();
-        ctx.moveTo(left, y);
-        ctx.lineTo(left + plotW, y);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(left + plotW, y); ctx.stroke();
         ctx.fillText(tick.toPrecision(3), 24, y + 4);
       }
       const palette = (plotOptions.colorPalette && Array.isArray(plotOptions.colorPalette)) ? plotOptions.colorPalette : colors;
@@ -614,10 +937,8 @@
         ctx.lineWidth = lineW;
         ctx.beginPath();
         set.data.forEach((row, i) => {
-          const x = xp(row.time_s);
-          const y = yp(row[yKey]);
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
+          const x = xp(row.time_s), y = yp(row[yKey]);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
           if (showMarkers) {
             ctx.fillStyle = ctx.strokeStyle;
             ctx.beginPath();
@@ -627,67 +948,43 @@
         });
         ctx.stroke();
         const legendY = top + 10 + index * 24;
-        ctx.beginPath();
-        ctx.moveTo(width - right + 18, legendY);
-        ctx.lineTo(width - right + 45, legendY);
-        ctx.stroke();
-        ctx.fillStyle = "#172026";
-        ctx.font = "13px Arial";
+        ctx.beginPath(); ctx.moveTo(width - right + 18, legendY); ctx.lineTo(width - right + 45, legendY); ctx.stroke();
+        ctx.fillStyle = "#0f1f2c"; ctx.font = "13px Arial";
         ctx.fillText(set.name.slice(0, 32), width - right + 54, legendY + 4);
       });
       if (guideType !== 'none' && Number.isFinite(guideValue)) {
-        ctx.save();
-        ctx.strokeStyle = '#cc2f1d';
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([6, 4]);
+        ctx.save(); ctx.strokeStyle = '#cc2f1d'; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]);
         if (guideType === 'horizontal') {
           const y = yp(guideValue);
-          ctx.beginPath();
-          ctx.moveTo(left, y);
-          ctx.lineTo(left + plotW, y);
-          ctx.stroke();
-          ctx.fillStyle = '#cc2f1d';
-          ctx.font = '13px Arial';
+          ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(left + plotW, y); ctx.stroke();
+          ctx.fillStyle = '#cc2f1d'; ctx.font = '13px Arial';
           if (guideLabel) ctx.fillText(guideLabel, left + 8, y - 8);
         } else if (guideType === 'vertical') {
           const x = xp(guideValue);
-          ctx.beginPath();
-          ctx.moveTo(x, top);
-          ctx.lineTo(x, top + plotH);
-          ctx.stroke();
-          ctx.fillStyle = '#cc2f1d';
-          ctx.font = '13px Arial';
+          ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + plotH); ctx.stroke();
+          ctx.fillStyle = '#cc2f1d'; ctx.font = '13px Arial';
           if (guideLabel) ctx.fillText(guideLabel, x + 8, top + 18);
         }
         ctx.restore();
       }
       if (trackResult) {
         const y = yp(trackResult.y);
-        ctx.save();
-        ctx.strokeStyle = '#1f6f8b';
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([4, 4]);
-        ctx.beginPath();
-        ctx.moveTo(left, y);
-        ctx.lineTo(left + plotW, y);
-        ctx.stroke();
-        ctx.fillStyle = '#1f6f8b';
-        ctx.font = '14px Arial';
+        ctx.save(); ctx.strokeStyle = '#0d6e9e'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]);
+        ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(left + plotW, y); ctx.stroke();
+        ctx.fillStyle = '#0d6e9e'; ctx.font = '14px Arial';
         ctx.fillText(`Smooth max: ${trackResult.y.toPrecision(6)} at ${trackResult.x.toPrecision(6)} s`, left + 8, y - 10);
         ctx.restore();
       }
-      ctx.fillStyle = "#172026";
-      ctx.font = "14px Arial";
+      ctx.fillStyle = "#0f1f2c"; ctx.font = "14px Arial";
       ctx.fillText("Time (s)", left + plotW / 2 - 28, height - 34);
-      ctx.fillText("Heat flux (W/cm^2)", 22, 42);
+      ctx.fillText("Heat flux (W/cm²)", 22, 42);
       return trackResult;
     }
 
     function csvForDataset(dataset) {
       const lines = ["time_s,heat_flux_w_cm2,heat_flux_savgol_w_cm2"];
-      for (const row of dataset.data) {
+      for (const row of dataset.data)
         lines.push([row.time_s, row.heat_flux_w_cm2, row.heat_flux_savgol_w_cm2].join(","));
-      }
       return lines.join("\n");
     }
 
@@ -696,18 +993,14 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.className = "button secondary";
-      a.href = url;
-      a.download = name;
-      a.textContent = `Download ${name}`;
+      a.href = url; a.download = name; a.textContent = `Download ${name}`;
       return a;
     }
 
     function canvasDownloadLink(canvas, name) {
       const a = document.createElement("a");
       a.className = "button secondary";
-      a.href = canvas.toDataURL("image/png");
-      a.download = name;
-      a.textContent = `Download ${name}`;
+      a.href = canvas.toDataURL("image/png"); a.download = name; a.textContent = `Download ${name}`;
       return a;
     }
 
@@ -715,8 +1008,9 @@
       const container = document.getElementById("tables");
       container.innerHTML = "";
       datasets.forEach(set => {
-        const heading = document.createElement("h2");
+        const heading = document.createElement("h3");
         heading.textContent = set.name;
+        heading.style.cssText = "padding:16px 20px 8px; font-size:14px; color:var(--ink-soft);";
         const table = document.createElement("table");
         table.innerHTML = "<thead><tr><th>time_s</th><th>heat_flux_w_cm2</th><th>heat_flux_savgol_w_cm2</th></tr></thead>";
         const body = document.createElement("tbody");
@@ -745,7 +1039,6 @@
           beta: Number(document.getElementById("beta").value),
           sensitivity: Number(document.getElementById("sensitivity").value)
         };
-        // gather advanced plot options (only applied if advanced is toggled)
         const plotOptions = {
           xDivisions: Number(document.getElementById('xDivisions').value || 7),
           yDivisions: Number(document.getElementById('yDivisions').value || 7),
@@ -764,18 +1057,17 @@
           trackSmooth: parseBoolean(document.getElementById('trackSmooth').value)
         };
         const all = [];
-        for (const file of files) {
-          all.push(...await readFileDatasets(file, settings));
-        }
+        for (const file of files) all.push(...await readFileDatasets(file, settings));
         if (!all.length) throw new Error("No usable numeric time/voltage data was found.");
         const rawCanvas = document.getElementById("raw-canvas");
         const smoothCanvas = document.getElementById("smooth-canvas");
         drawPlot(rawCanvas, all, "heat_flux_w_cm2", "Combined Raw Heat Flux vs Time", plotOptions);
-        const smoothMetrics = drawPlot(smoothCanvas, all, "heat_flux_savgol_w_cm2", `Combined Savitzky-Golay Heat Flux vs Time (${settings.smoothWindow} points)`, plotOptions);
+        const smoothMetrics = drawPlot(smoothCanvas, all, "heat_flux_savgol_w_cm2",
+          `Combined Savitzky-Golay Heat Flux vs Time (${settings.smoothWindow} pts)`, plotOptions);
         const trackSummary = document.getElementById('track-summary');
         if (plotOptions.trackSmooth && smoothMetrics) {
           trackSummary.style.display = 'block';
-          trackSummary.textContent = `Tracked smooth maximum: ${smoothMetrics.y.toPrecision(6)} W/cm^2 at ${smoothMetrics.x.toPrecision(6)} s`;
+          trackSummary.textContent = `Tracked smooth maximum: ${smoothMetrics.y.toPrecision(6)} W/cm² at ${smoothMetrics.x.toPrecision(6)} s`;
         } else {
           trackSummary.style.display = 'none';
           trackSummary.textContent = '';
@@ -789,6 +1081,7 @@
         document.getElementById("combined-section").style.display = "block";
         document.getElementById("table-section").style.display = "block";
         showMessage("");
+        document.getElementById("combined-section").scrollIntoView({ behavior: "smooth", block: "start" });
       } catch (error) {
         showMessage(error.message || String(error));
       }

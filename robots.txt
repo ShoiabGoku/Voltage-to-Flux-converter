@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://shoiabgoku.github.io/Voltage-to-Flux-converter/sitemap.xml
