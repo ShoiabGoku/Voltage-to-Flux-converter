@@ -4,533 +4,425 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- SEO: primary -->
+  <!-- SEO -->
   <title>Voltage to Heat Flux Converter | Cook-Felderman Online Tool</title>
-  <meta name="description" content="Free online tool that converts voltage vs. time data into heat flux (W/cm²) using the Cook-Felderman method with Savitzky-Golay smoothing. Upload Excel or CSV files, visualise results instantly — no server, no sign-up.">
-  <meta name="keywords" content="voltage to heat flux converter, Cook-Felderman, heat flux calculation, Savitzky-Golay smoothing, transient heat flux, gauge voltage conversion, W/cm2, heat transfer tool">
-  <meta name="robots" content="index, follow">
+  <meta name="description" content="Free online tool to convert voltage vs time data into heat flux (W/cm²) using the Cook-Felderman method with Savitzky-Golay smoothing. Upload Excel or CSV files and get instant graphs and downloadable results.">
+  <meta name="keywords" content="voltage to heat flux converter, Cook-Felderman method, heat flux calculation, Savitzky-Golay smoothing, thermal measurement, heat flux online tool, voltage heat flux W/cm2">
+  <meta name="author" content="ShoiabGoku">
   <link rel="canonical" href="https://shoiabgoku.github.io/Voltage-to-Flux-converter/">
 
-  <!-- Open Graph (for social sharing and Google rich previews) -->
+  <!-- Open Graph / Social -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://shoiabgoku.github.io/Voltage-to-Flux-converter/">
-  <meta property="og:title" content="Voltage to Heat Flux Converter — Cook-Felderman Method">
-  <meta property="og:description" content="Convert voltage–time data to heat flux (W/cm²) instantly in your browser. Uses Cook-Felderman reduction with Savitzky-Golay smoothing. Free, private, no upload.">
-  <meta property="og:image" content="https://shoiabgoku.github.io/Voltage-to-Flux-converter/og-preview.png">
-
-  <!-- Twitter card -->
+  <meta property="og:title" content="Voltage to Heat Flux Converter | Cook-Felderman Online Tool">
+  <meta property="og:description" content="Convert voltage vs time data into heat flux (W/cm²) instantly. Upload Excel/CSV, apply Cook-Felderman reduction, and download publication-ready graphs.">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Voltage to Heat Flux Converter — Cook-Felderman Method">
-  <meta name="twitter:description" content="Free browser-based tool: upload Excel/CSV voltage data, get instant heat flux graphs and downloadable CSV results.">
+  <meta name="twitter:title" content="Voltage to Heat Flux Converter">
+  <meta name="twitter:description" content="Free online Cook-Felderman heat flux tool with Savitzky-Golay smoothing. Upload Excel or CSV and get instant results.">
 
-  <!-- Structured data: SoftwareApplication -->
+  <!-- Structured Data -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
+    "@type": "WebApplication",
     "name": "Voltage to Heat Flux Converter",
-    "applicationCategory": "ScientificApplication",
-    "operatingSystem": "Web",
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
     "url": "https://shoiabgoku.github.io/Voltage-to-Flux-converter/",
-    "description": "Convert voltage vs. time measurements to heat flux using the Cook-Felderman method with optional Savitzky-Golay smoothing. Runs entirely in the browser.",
-    "featureList": [
-      "Cook-Felderman heat flux reduction",
-      "Savitzky-Golay smoothing",
-      "Excel and CSV file support",
-      "Multi-dataset overlay plots",
-      "PNG and CSV download",
-      "No data upload — fully private"
-    ]
+    "description": "Online tool to convert voltage vs time data into heat flux using the Cook-Felderman method with Savitzky-Golay smoothing.",
+    "applicationCategory": "ScienceApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
   }
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
-    /* ── Design tokens ── */
     :root {
-      --bg: #f0f4f8;
-      --surface: #ffffff;
-      --border: #d1dbe5;
-      --ink: #0f1f2c;
-      --ink-soft: #4a5a68;
-      --accent: #0d6e9e;
-      --accent-dark: #095880;
-      --accent-light: #e6f4fb;
-      --warm: #c0432b;
-      --success: #1e8a4a;
+      --ink: #0f1c23;
+      --muted: #5a6a75;
+      --line: #d4dde5;
+      --panel: #f4f7fa;
+      --accent: #0f7ca8;
+      --accent-dark: #0a5e80;
+      --accent-light: #e6f4fa;
       --radius: 10px;
-      --shadow: 0 2px 12px rgba(13,110,158,.10);
-      --shadow-lg: 0 8px 32px rgba(13,110,158,.14);
-      --font: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      --shadow: 0 2px 12px rgba(15,28,35,.08);
     }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+    *, *::before, *::after { box-sizing: border-box; }
     body {
-      font-family: var(--font);
-      background: var(--bg);
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       color: var(--ink);
+      background: #f0f4f8;
       line-height: 1.6;
     }
 
-    /* ── Nav ── */
-    .nav {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 24px;
+    /* Nav */
+    nav {
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      padding: 0 28px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 56px;
+      height: 58px;
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: 0 1px 6px rgba(0,0,0,.06);
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
     }
     .nav-brand {
+      font-size: 16px;
       font-weight: 700;
-      font-size: 15px;
       color: var(--accent);
       text-decoration: none;
-      letter-spacing: -.2px;
     }
     .nav-cta {
       background: var(--accent);
       color: #fff;
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 700;
-      padding: 8px 18px;
+      border: none;
       border-radius: 6px;
-      transition: background .15s;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
     }
     .nav-cta:hover { background: var(--accent-dark); }
 
-    /* ── Hero ── */
+    /* Hero */
     .hero {
-      background: linear-gradient(135deg, #0a4a6e 0%, #0d6e9e 55%, #0e90c8 100%);
+      background: linear-gradient(135deg, #0a3d55 0%, #0f7ca8 60%, #1a9ecf 100%);
       color: #fff;
       text-align: center;
-      padding: 72px 24px 80px;
+      padding: 72px 24px 64px;
     }
     .hero-badge {
       display: inline-block;
-      background: rgba(255,255,255,.18);
-      border: 1px solid rgba(255,255,255,.35);
-      border-radius: 100px;
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 20px;
       font-size: 12px;
-      font-weight: 700;
-      letter-spacing: .5px;
+      font-weight: 600;
+      letter-spacing: .6px;
       text-transform: uppercase;
       padding: 4px 14px;
-      margin-bottom: 22px;
+      margin-bottom: 20px;
     }
     .hero h1 {
-      font-size: clamp(26px, 5vw, 46px);
+      margin: 0 0 18px;
+      font-size: clamp(28px, 5vw, 48px);
       font-weight: 800;
       line-height: 1.15;
       letter-spacing: -.5px;
-      max-width: 780px;
-      margin: 0 auto 16px;
     }
-    .hero h1 span { color: #7dd8f8; }
+    .hero h1 span { color: #7de0ff; }
     .hero p {
-      font-size: clamp(15px, 2.5vw, 18px);
+      margin: 0 auto 32px;
+      max-width: 560px;
+      font-size: 18px;
       opacity: .88;
-      max-width: 600px;
-      margin: 0 auto 36px;
+      line-height: 1.6;
     }
-    .hero-buttons {
-      display: flex;
-      gap: 14px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
+    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
     .btn-primary {
       background: #fff;
       color: var(--accent-dark);
-      font-weight: 800;
-      font-size: 15px;
-      padding: 14px 32px;
-      border-radius: 8px;
-      text-decoration: none;
       border: none;
+      border-radius: 8px;
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 700;
       cursor: pointer;
-      transition: transform .12s, box-shadow .12s;
-      box-shadow: 0 4px 18px rgba(0,0,0,.18);
+      text-decoration: none;
+      box-shadow: 0 4px 14px rgba(0,0,0,.18);
+      transition: transform .15s, box-shadow .15s;
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,.22); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,.22); }
     .btn-outline {
       background: transparent;
       color: #fff;
-      border: 2px solid rgba(255,255,255,.6);
-      font-weight: 700;
-      font-size: 15px;
-      padding: 12px 28px;
+      border: 2px solid rgba(255,255,255,.55);
       border-radius: 8px;
-      text-decoration: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 600;
       cursor: pointer;
-      transition: border-color .15s, background .15s;
+      text-decoration: none;
     }
-    .btn-outline:hover { border-color: #fff; background: rgba(255,255,255,.1); }
+    .btn-outline:hover { border-color: #fff; }
 
-    /* ── Why section ── */
-    .why {
+    /* Benefits strip */
+    .benefits {
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      padding: 32px 24px;
+    }
+    .benefits-inner {
       max-width: 1100px;
       margin: 0 auto;
-      padding: 64px 24px 0;
-    }
-    .section-label {
-      text-align: center;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 12px;
-    }
-    .section-title {
-      text-align: center;
-      font-size: clamp(20px, 3.5vw, 30px);
-      font-weight: 800;
-      letter-spacing: -.3px;
-      margin-bottom: 40px;
-      color: var(--ink);
-    }
-    .features {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 20px;
     }
-    .feature-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px 24px;
-      box-shadow: var(--shadow);
-    }
-    .feature-icon {
-      width: 44px;
-      height: 44px;
+    .benefit-item { display: flex; align-items: flex-start; gap: 12px; }
+    .benefit-icon {
+      width: 38px; height: 38px;
+      border-radius: 8px;
       background: var(--accent-light);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 16px;
-      font-size: 20px;
+      color: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
     }
-    .feature-card h3 {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-    .feature-card p {
-      font-size: 13.5px;
-      color: var(--ink-soft);
-      line-height: 1.55;
-    }
+    .benefit-item h3 { margin: 0 0 3px; font-size: 14px; font-weight: 700; }
+    .benefit-item p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.45; }
 
-    /* ── Converter wrapper ── */
-    .converter-section {
+    /* Page layout */
+    .page-main {
       max-width: 1100px;
       margin: 0 auto;
-      padding: 64px 24px 48px;
+      padding: 36px 20px 60px;
     }
-    .converter-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
+    .section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 8px;
+    }
+
+    /* Card */
+    .card {
+      background: #fff;
+      border: 1px solid var(--line);
       border-radius: var(--radius);
-      box-shadow: var(--shadow-lg);
+      box-shadow: var(--shadow);
       overflow: hidden;
     }
     .card-header {
-      background: linear-gradient(90deg, var(--accent) 0%, #1086bb 100%);
-      color: #fff;
-      padding: 20px 28px;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    .card-header h2 {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 4px;
+    .card-header h2 { margin: 0; font-size: 16px; font-weight: 700; }
+    .step-badge {
+      background: var(--accent); color: #fff;
+      border-radius: 50%; width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
     }
-    .card-header p {
-      font-size: 13px;
-      opacity: .82;
-    }
-    .card-body { padding: 28px; }
+    .card-body { padding: 24px; }
 
-    /* ── Form ── */
+    /* Form */
     .grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 18px;
     }
     .span-3 { grid-column: span 3; }
-    label {
-      display: block;
-      font-size: 12.5px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: var(--ink);
-      letter-spacing: .1px;
-    }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
     input, select {
       width: 100%;
-      border: 1.5px solid var(--border);
+      border: 1px solid #c2cdd6;
       border-radius: 7px;
       padding: 10px 12px;
       font-size: 14px;
-      font-family: var(--font);
       background: #fff;
       color: var(--ink);
       transition: border-color .15s, box-shadow .15s;
-      outline: none;
     }
     input:focus, select:focus {
+      outline: none;
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(13,110,158,.12);
+      box-shadow: 0 0 0 3px rgba(15,124,168,.12);
     }
-    input[type="file"] { padding: 8px; }
-    .hint {
-      color: var(--ink-soft);
-      font-size: 12.5px;
-      margin-top: 6px;
-      line-height: 1.5;
-    }
+    input[type="file"] { padding: 9px 12px; cursor: pointer; }
+    .hint { color: var(--muted); font-size: 12.5px; margin-top: 7px; line-height: 1.5; }
 
-    /* ── Advanced toggle ── */
+    /* Advanced */
     .advanced-toggle {
       background: transparent;
       color: var(--accent);
-      border: 1.5px dashed var(--border);
+      border: 1px dashed #9bbfcf;
       padding: 8px 14px;
       border-radius: 7px;
       cursor: pointer;
-      font-weight: 700;
+      font-weight: 600;
       font-size: 13px;
-      font-family: var(--font);
-      transition: background .12s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
     .advanced-toggle:hover { background: var(--accent-light); }
     .advanced-panel {
-      margin-top: 14px;
-      padding: 16px;
-      border: 1px solid #dce8f0;
-      border-radius: 9px;
-      background: #f5fafd;
-      display: none;
+      margin-top: 16px; padding: 16px;
+      border: 1px solid #dce8ef; border-radius: 8px;
+      background: #f8fbfd; display: none;
     }
-    .advanced-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    @media (max-width: 760px) { .advanced-grid { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 480px) { .advanced-grid { grid-template-columns: 1fr; } }
+    .advanced-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 
-    /* ── Actions ── */
+    /* Buttons */
     .actions {
       margin-top: 22px;
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      flex-wrap: wrap;
+      display: flex; justify-content: flex-end; align-items: center;
+      gap: 10px; flex-wrap: wrap;
     }
-    button.submit-btn {
-      border: 0;
-      border-radius: 8px;
-      padding: 12px 28px;
-      background: var(--accent);
-      color: #fff;
-      font-weight: 800;
-      font-size: 15px;
-      font-family: var(--font);
-      cursor: pointer;
+    .btn {
+      border: 0; border-radius: 7px; padding: 12px 20px;
+      background: var(--accent); color: #fff;
+      font-weight: 700; text-decoration: none;
+      cursor: pointer; font-size: 14px;
       transition: background .15s, transform .1s;
-      box-shadow: 0 3px 12px rgba(13,110,158,.25);
     }
-    button.submit-btn:hover { background: var(--accent-dark); transform: translateY(-1px); }
+    .btn:hover { background: var(--accent-dark); transform: translateY(-1px); }
+    .btn-lg { padding: 14px 32px; font-size: 16px; border-radius: 8px; box-shadow: 0 3px 10px rgba(15,124,168,.3); }
+    .btn.secondary { background: #5a6a75; }
+    .btn.secondary:hover { background: #46535c; }
 
-    /* ── Download / secondary buttons ── */
-    a.button {
-      display: inline-block;
-      border: 0;
-      border-radius: 7px;
-      padding: 10px 16px;
-      background: var(--accent);
-      color: #fff;
-      font-weight: 700;
-      font-size: 13px;
-      text-decoration: none;
-      cursor: pointer;
-    }
-    a.secondary { background: #596773; }
-
-    /* ── Message ── */
+    /* Message */
     .message {
-      margin-top: 18px;
-      border: 1.5px solid #e0b066;
-      background: #fff9ed;
-      color: #6d4311;
-      padding: 12px 16px;
-      border-radius: 8px;
-      display: none;
-      font-size: 14px;
+      margin-top: 16px; border: 1px solid #e8b86a;
+      background: #fffaed; color: #6b3f0f;
+      padding: 13px 16px; border-radius: 8px;
+      display: none; font-size: 14px;
     }
+    .message.processing { border-color: #7ec8e3; background: #e9f6fb; color: #0a5578; }
 
-    /* ── Result sections ── */
-    .result {
-      margin-top: 24px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      background: var(--surface);
-      box-shadow: var(--shadow);
-    }
-    .result h2 {
-      margin: 0;
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border);
-      font-size: 16px;
-      font-weight: 700;
-      background: #f8fbfd;
-      color: var(--ink);
-    }
+    /* Results */
+    .result { margin-top: 28px; }
     .canvas-wrap { padding: 16px; overflow-x: auto; }
     canvas {
-      width: 100%;
-      min-width: 760px;
-      border: 1px solid var(--border);
-      background: #fff;
-      display: block;
-      border-radius: 6px;
+      width: 100%; min-width: 680px;
+      border: 1px solid var(--line); border-radius: 6px;
+      background: #fff; display: block;
     }
     .downloads {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      padding: 14px 20px;
-      border-top: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; gap: 10px;
+      padding: 16px 20px; border-top: 1px solid var(--line);
+      background: var(--panel);
     }
-    table {
-      width: calc(100% - 40px);
-      margin: 0 20px 20px;
-      border-collapse: collapse;
-      font-size: 13px;
+    table { width: calc(100% - 40px); margin: 0 20px 20px; border-collapse: collapse; font-size: 13px; }
+    th, td { border-bottom: 1px solid var(--line); padding: 9px 10px; text-align: right; }
+    th {
+      background: var(--panel); font-weight: 600; font-size: 12px;
+      text-transform: uppercase; letter-spacing: .4px; color: var(--muted);
     }
-    th, td {
-      border-bottom: 1px solid var(--border);
-      padding: 9px 10px;
-      text-align: right;
-    }
-    th { background: #f5f8fb; font-weight: 700; font-size: 12px; letter-spacing: .2px; }
     th:first-child, td:first-child { text-align: left; }
+    #tables h2 { padding: 16px 20px 0; font-size: 14px; font-weight: 700; margin: 0; }
 
-    /* ── Footer ── */
+    /* Footer */
     footer {
-      text-align: center;
-      padding: 40px 24px 32px;
-      font-size: 13px;
-      color: var(--ink-soft);
-      border-top: 1px solid var(--border);
-      margin-top: 48px;
-      background: var(--surface);
+      background: #fff; border-top: 1px solid var(--line);
+      text-align: center; padding: 24px;
+      font-size: 13px; color: var(--muted);
     }
     footer a { color: var(--accent); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
 
-    /* ── Mobile ── */
+    /* Responsive */
     @media (max-width: 760px) {
-      .nav-brand { font-size: 13px; }
+      nav { padding: 0 16px; }
+      .hero { padding: 48px 16px 44px; }
+      .hero p { font-size: 16px; }
+      .page-main { padding: 24px 14px 48px; }
+      .card-body { padding: 16px; }
       .grid { grid-template-columns: 1fr; }
       .span-3 { grid-column: span 1; }
-      .hero { padding: 52px 20px 60px; }
-      .card-body { padding: 20px; }
-      .why, .converter-section { padding-left: 16px; padding-right: 16px; }
+      .advanced-grid { grid-template-columns: 1fr 1fr; }
+      .actions { justify-content: stretch; }
+      .btn-lg { width: 100%; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      .advanced-grid { grid-template-columns: 1fr; }
+      .benefits-inner { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
-  <!-- ── Nav ── -->
-  <nav class="nav" aria-label="Site navigation">
-    <a href="#converter" class="nav-brand">&#9889; Voltage &rarr; Heat Flux</a>
-    <a href="#converter" class="nav-cta">Use the Tool &darr;</a>
+  <nav>
+    <a class="nav-brand" href="#">&#x26A1; V &rarr; Heat Flux Converter</a>
+    <a class="nav-cta" href="#converter">Start Converting</a>
   </nav>
 
-  <!-- ── Hero ── -->
-  <section class="hero" aria-labelledby="hero-heading">
-    <div class="hero-badge">Free &bull; Browser-based &bull; No sign-up</div>
-    <h1 id="hero-heading">
-      Convert Voltage to <span>Heat Flux</span><br>in Seconds
-    </h1>
-    <p>
-      Upload your voltage–time data and instantly get calibrated heat flux curves
-      using the Cook-Felderman method with Savitzky-Golay smoothing.
-      All computation runs in your browser — your data never leaves your machine.
-    </p>
-    <div class="hero-buttons">
-      <a href="#converter" class="btn-primary">Start Converting &darr;</a>
-      <a href="https://github.com/ShoiabGoku/Voltage-to-Flux-converter" target="_blank" rel="noopener" class="btn-outline">View on GitHub</a>
+  <section class="hero">
+    <div class="hero-badge">Free &middot; No signup &middot; Runs in your browser</div>
+    <h1>Convert Voltage to<br><span>Heat Flux</span> Instantly</h1>
+    <p>Upload your voltage vs time data, apply Cook-Felderman reduction with Savitzky-Golay smoothing, and get publication-ready heat flux graphs in seconds.</p>
+    <div class="hero-actions">
+      <a class="btn-primary" href="#converter">Upload &amp; Convert Now</a>
+      <a class="btn-outline" href="#how-it-works">How it works</a>
     </div>
   </section>
 
-  <!-- ── Why section ── -->
-  <section class="why" aria-labelledby="why-heading">
-    <p class="section-label">Why use this tool</p>
-    <h2 class="section-title" id="why-heading">Everything you need for heat flux analysis</h2>
-    <div class="features">
-      <div class="feature-card">
-        <div class="feature-icon">&#128200;</div>
-        <h3>Cook-Felderman Reduction</h3>
-        <p>Implements the industry-standard semi-infinite body method to recover surface heat flux from thermocouple or gauge voltage signals.</p>
+  <section class="benefits">
+    <div class="benefits-inner">
+      <div class="benefit-item">
+        <div class="benefit-icon">&#x1F512;</div>
+        <div>
+          <h3>100% Private</h3>
+          <p>All processing happens in your browser. Your data is never uploaded to any server.</p>
+        </div>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">&#128292;</div>
-        <h3>Savitzky-Golay Smoothing</h3>
-        <p>Automatically applies polynomial smoothing to reduce noise while preserving peak shape — configurable window and polynomial order.</p>
+      <div class="benefit-item">
+        <div class="benefit-icon">&#x26A1;</div>
+        <div>
+          <h3>Instant Results</h3>
+          <p>Get heat flux graphs and downloadable CSV data in seconds, not hours.</p>
+        </div>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">&#128196;</div>
-        <h3>Excel &amp; CSV Support</h3>
-        <p>Upload .xlsx, .xls, or .csv files with multiple sheets. Each sheet is processed as a separate dataset and overlaid on the same chart.</p>
+      <div class="benefit-item">
+        <div class="benefit-icon">&#x1F4CA;</div>
+        <div>
+          <h3>Publication-Ready Plots</h3>
+          <p>Export high-resolution PNG charts with raw and smoothed curves side by side.</p>
+        </div>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">&#128274;</div>
-        <h3>100% Private</h3>
-        <p>No server, no account. Your experimental data is processed entirely in your browser and never uploaded anywhere.</p>
+      <div class="benefit-item">
+        <div class="benefit-icon">&#x1F9EE;</div>
+        <div>
+          <h3>Cook-Felderman Method</h3>
+          <p>Implements the standard numerical reduction used in thermal research.</p>
+        </div>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">&#128190;</div>
-        <h3>Download Results</h3>
-        <p>Export publication-ready PNG plots and CSV files with raw and smoothed heat flux values for every dataset in one click.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">&#9881;&#65039;</div>
-        <h3>Advanced Controls</h3>
-        <p>Fine-tune axis limits, tick spacing, guide lines, colour schemes, and track the smooth peak maximum — all without writing code.</p>
+      <div class="benefit-item">
+        <div class="benefit-icon">&#x1F4C1;</div>
+        <div>
+          <h3>Excel &amp; CSV Support</h3>
+          <p>Accepts .xlsx, .xls, and .csv — process multiple datasets at once.</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- ── Converter ── -->
-  <section class="converter-section" id="converter" aria-labelledby="converter-heading">
-    <div class="converter-card">
+  <main class="page-main" id="converter">
+
+    <div id="how-it-works" style="margin-bottom:32px;">
+      <div class="section-label">How it works</div>
+      <p style="margin:0 0 10px;font-size:22px;font-weight:700;">Three steps to heat flux</p>
+      <ol style="color:var(--muted);font-size:14px;margin:0;padding-left:20px;line-height:2.2;">
+        <li>Upload one or more Excel or CSV files with <strong>time</strong> (column 1) and <strong>voltage</strong> (column 2).</li>
+        <li>Configure sensor parameters &mdash; gain, baseline points, beta, and sensitivity.</li>
+        <li>Click <strong>Generate Heat Flux Graphs</strong> and download your results.</li>
+      </ol>
+    </div>
+
+    <div class="card">
       <div class="card-header">
-        <h2 id="converter-heading">Heat Flux Converter</h2>
-        <p>Cook-Felderman reduction &bull; Savitzky-Golay smoothing &bull; results in W/cm&sup2;</p>
+        <span class="step-badge">&#x2699;</span>
+        <h2>Converter Settings</h2>
       </div>
       <div class="card-body">
-        <form id="converter-form" novalidate>
+        <form id="converter-form">
           <div class="grid">
             <div class="span-3">
-              <label for="files">Voltage vs time Excel / CSV files</label>
+              <label for="files">Voltage vs time files &mdash; Excel or CSV</label>
               <input id="files" type="file" accept=".xlsx,.xls,.csv" multiple required>
-              <p class="hint">Each file or sheet must contain time in the first numeric column and voltage in the second. Files are processed locally — never uploaded.</p>
+              <div class="hint">Each file or sheet must have <strong>time</strong> in the first numeric column and <strong>voltage</strong> in the second. Files are processed entirely in your browser and are never uploaded to a server.</div>
             </div>
             <div>
               <label for="voltageMode">Voltage conversion</label>
               <select id="voltageMode">
-                <option value="divide" selected>Input is Voltage &times; gain &rarr; divide by gain</option>
+                <option value="divide" selected>Input is Voltage &times; 350, use value / gain</option>
                 <option value="multiply">Multiply input by gain</option>
                 <option value="none">Use input voltage directly</option>
               </select>
@@ -552,7 +444,7 @@
               <input id="smoothPolyorder" type="number" min="1" value="3">
             </div>
             <div>
-              <label for="beta">Beta (&beta;)</label>
+              <label for="beta">Beta (&rho;ck)</label>
               <input id="beta" type="number" step="any" value="10040">
             </div>
             <div>
@@ -561,8 +453,10 @@
             </div>
           </div>
 
-          <div style="margin-top:16px; display:flex; gap:10px; align-items:center;">
-            <button type="button" id="advanced-toggle" class="advanced-toggle">&#9881; Advanced options</button>
+          <div style="margin-top:16px;">
+            <button type="button" id="advanced-toggle" class="advanced-toggle">
+              <span id="advanced-arrow">&#9660;</span> Advanced options
+            </button>
           </div>
 
           <div id="advanced-panel" class="advanced-panel">
@@ -576,19 +470,19 @@
                 <input id="yDivisions" type="number" min="2" value="7">
               </div>
               <div>
-                <label for="xMin">X axis min</label>
+                <label for="xMin">X axis min (optional)</label>
                 <input id="xMin" type="number" step="any" placeholder="auto">
               </div>
               <div>
-                <label for="xMax">X axis max</label>
+                <label for="xMax">X axis max (optional)</label>
                 <input id="xMax" type="number" step="any" placeholder="auto">
               </div>
               <div>
-                <label for="yMin">Y axis min</label>
+                <label for="yMin">Y axis min (optional)</label>
                 <input id="yMin" type="number" step="any" placeholder="auto">
               </div>
               <div>
-                <label for="yMax">Y axis max</label>
+                <label for="yMax">Y axis max (optional)</label>
                 <input id="yMax" type="number" step="any" placeholder="auto">
               </div>
               <div>
@@ -605,11 +499,11 @@
                 <input id="lineWidth" type="number" min="1" max="10" step="0.1" value="2.8">
               </div>
               <div>
-                <label for="xTickInterval">X tick interval</label>
+                <label for="xTickInterval">X tick interval (optional)</label>
                 <input id="xTickInterval" type="number" step="any" placeholder="auto">
               </div>
               <div>
-                <label for="yTickInterval">Y tick interval</label>
+                <label for="yTickInterval">Y tick interval (optional)</label>
                 <input id="yTickInterval" type="number" step="any" placeholder="auto">
               </div>
               <div>
@@ -646,61 +540,60 @@
           </div>
 
           <div class="actions">
-            <button type="submit" class="submit-btn">&#9889; Generate Heat Flux Graphs</button>
+            <button type="submit" class="btn btn-lg">&#x1F4C8; Generate Heat Flux Graphs</button>
           </div>
         </form>
-
-        <div id="message" class="message" role="alert"></div>
-
-        <section class="result" id="combined-section" style="display:none" aria-label="Combined heat flux plots">
-          <h2>Combined heat flux comparison</h2>
-          <div class="canvas-wrap"><canvas id="raw-canvas" width="1440" height="760" aria-label="Raw heat flux plot"></canvas></div>
-          <div class="canvas-wrap"><canvas id="smooth-canvas" width="1440" height="760" aria-label="Smoothed heat flux plot"></canvas></div>
-          <div class="downloads" id="downloads"></div>
-          <div id="track-summary" style="padding:14px 20px; border-top:1px solid var(--border); display:none; color:var(--ink); font-size:14px; font-weight:600;"></div>
-        </section>
-
-        <section class="result" id="table-section" style="display:none" aria-label="Data preview table">
-          <h2>Preview of calculated data</h2>
-          <div id="tables"></div>
-        </section>
       </div>
     </div>
-  </section>
 
-  <!-- ── Footer ── -->
+    <div id="message" class="message"></div>
+
+    <section class="result card" id="combined-section" style="display:none">
+      <div class="card-header"><h2>Combined heat flux comparison</h2></div>
+      <div class="canvas-wrap"><canvas id="raw-canvas" width="1440" height="760"></canvas></div>
+      <div class="canvas-wrap"><canvas id="smooth-canvas" width="1440" height="760"></canvas></div>
+      <div class="downloads" id="downloads"></div>
+      <div id="track-summary" style="padding:14px 20px;border-top:1px solid var(--line);display:none;font-size:14px;background:var(--accent-light);"></div>
+    </section>
+
+    <section class="result card" id="table-section" style="display:none">
+      <div class="card-header"><h2>Preview of calculated data</h2></div>
+      <div id="tables"></div>
+    </section>
+
+  </main>
+
   <footer>
-    <p>
-      <strong>Voltage to Heat Flux Converter</strong> &mdash;
-      Cook-Felderman method &bull; Savitzky-Golay smoothing &bull;
-      All calculations run in your browser &bull;
-      <a href="https://github.com/ShoiabGoku/Voltage-to-Flux-converter" target="_blank" rel="noopener">GitHub</a>
-    </p>
-    <p style="margin-top:8px; font-size:12px; opacity:.7;">No data is uploaded. No account required. Free to use.</p>
+    <p>Voltage to Heat Flux Converter &mdash; Cook-Felderman method with Savitzky-Golay smoothing &mdash; <a href="https://github.com/ShoiabGoku/Voltage-to-Flux-converter" target="_blank" rel="noopener">View source on GitHub</a></p>
+    <p style="margin-top:6px;">All computation runs locally in your browser. No data is transmitted.</p>
   </footer>
 
   <script>
-    const colors = ["#0d6e9e","#c0432b","#2e8b4a","#7c42b0","#c97d1a","#2a559e","#7a3e2f","#3d7a72"];
+    const colors = ["#0f7ca8","#c0452e","#2a7a4b","#7b4fa5","#b87420","#2d5fa8","#7a3c2d","#3d7a6e"];
     const palettes = {
       default: colors,
-      warm: ["#c0432b","#c97d1a","#7a3e2f","#a34520"],
-      cool: ["#0d6e9e","#2a559e","#3d7a72","#2e8b4a"],
+      warm: ["#c0452e","#b87420","#7a3c2d","#9e3d5a"],
+      cool: ["#0f7ca8","#2d5fa8","#3d7a6e","#2a7a4b"],
       mono: ["#111","#333","#666","#999"]
     };
 
     document.addEventListener('DOMContentLoaded', () => {
       const toggle = document.getElementById('advanced-toggle');
       const panel = document.getElementById('advanced-panel');
-      toggle.addEventListener('click', () => {
-        const open = panel.style.display === 'block';
-        panel.style.display = open ? 'none' : 'block';
-        toggle.textContent = open ? '⚙ Advanced options' : '⚙ Hide advanced options';
-      });
+      const arrow = document.getElementById('advanced-arrow');
+      if (toggle && panel) {
+        toggle.addEventListener('click', () => {
+          const open = panel.style.display === 'block';
+          panel.style.display = open ? 'none' : 'block';
+          arrow.textContent = open ? '▼' : '▲';
+        });
+      }
     });
 
-    function showMessage(text) {
+    function showMessage(text, type) {
       const el = document.getElementById("message");
       el.textContent = text;
+      el.className = "message" + (type === 'processing' ? ' processing' : '');
       el.style.display = text ? "block" : "none";
     }
 
@@ -720,11 +613,10 @@
       return Number.isFinite(num) ? num : undefined;
     }
 
-    function parseBoolean(value) {
-      return String(value) === 'true';
-    }
+    function parseBoolean(value) { return String(value) === 'true'; }
 
-    function niceTicks(vmin, vmax, count = 6, interval) {
+    function niceTicks(vmin, vmax, count, interval) {
+      count = count || 6;
       if (Math.abs(vmax - vmin) < 1e-14) return [vmin];
       let step;
       if (interval && Number.isFinite(interval) && interval > 0) {
@@ -781,17 +673,17 @@
 
     function savitzkyGolay(values, windowPoints, polyorder) {
       if (values.length < 3) return [...values];
-      let window = Math.min(windowPoints, values.length);
-      if (window % 2 === 0) window -= 1;
-      window = Math.max(3, window);
-      const order = Math.min(polyorder, window - 1);
-      const half = Math.floor(window / 2);
+      let w = Math.min(windowPoints, values.length);
+      if (w % 2 === 0) w -= 1;
+      w = Math.max(3, w);
+      const order = Math.min(polyorder, w - 1);
+      const half = Math.floor(w / 2);
       return values.map((_, index) => {
         let start = Math.max(0, index - half);
         let stop = Math.min(values.length, index + half + 1);
-        if (stop - start < window) {
-          if (start === 0) stop = Math.min(values.length, window);
-          else start = Math.max(0, values.length - window);
+        if (stop - start < w) {
+          if (start === 0) stop = Math.min(values.length, w);
+          else start = Math.max(0, values.length - w);
         }
         const x = [], y = [];
         for (let i = start; i < stop; i++) { x.push(i - index); y.push(values[i]); }
@@ -876,7 +768,8 @@
       return datasets;
     }
 
-    function drawPlot(canvas, datasets, yKey, title, plotOptions = {}) {
+    function drawPlot(canvas, datasets, yKey, title, plotOptions) {
+      plotOptions = plotOptions || {};
       const ctx = canvas.getContext("2d");
       const width = canvas.width, height = canvas.height;
       const left = 120, right = 230, top = 70, bottom = 90;
@@ -896,24 +789,24 @@
       if (!isFinite(ymin) || !isFinite(ymax) || ymin === ymax) { ymin = Math.min(...ys); ymax = Math.max(...ys); }
       const ypad = 0.08 * Math.max(1e-12, ymax - ymin);
       ymin -= ypad; ymax += ypad;
-      const xp = value => left + (value - xmin) / (xmax - xmin) * plotW;
-      const yp = value => top + (ymax - value) / (ymax - ymin) * plotH;
-      ctx.fillStyle = "#0f1f2c"; ctx.font = "bold 18px Arial";
+      const xp = v => left + (v - xmin) / (xmax - xmin) * plotW;
+      const yp = v => top + (ymax - v) / (ymax - ymin) * plotH;
+      ctx.fillStyle = "#172026"; ctx.font = "18px Arial";
       ctx.fillText(title, left, 34);
       ctx.strokeStyle = "#222"; ctx.lineWidth = 2;
       ctx.strokeRect(left, top, plotW, plotH);
       ctx.lineWidth = 1; ctx.strokeStyle = "#dde2e6";
       ctx.fillStyle = "#2d363d"; ctx.font = "13px Arial";
-      const xDivisions = (plotOptions.xDivisions && Number(plotOptions.xDivisions) > 1) ? Number(plotOptions.xDivisions) : 7;
-      const yDivisions = (plotOptions.yDivisions && Number(plotOptions.yDivisions) > 1) ? Number(plotOptions.yDivisions) : 7;
+      const xDiv = (plotOptions.xDivisions && Number(plotOptions.xDivisions) > 1) ? Number(plotOptions.xDivisions) : 7;
+      const yDiv = (plotOptions.yDivisions && Number(plotOptions.yDivisions) > 1) ? Number(plotOptions.yDivisions) : 7;
       const xTickInterval = parseOptionalNumber(plotOptions.xTickInterval);
       const yTickInterval = parseOptionalNumber(plotOptions.yTickInterval);
-      for (const tick of niceTicks(xmin, xmax, xDivisions, xTickInterval)) {
+      for (const tick of niceTicks(xmin, xmax, xDiv, xTickInterval)) {
         const x = xp(tick);
         ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + plotH); ctx.stroke();
         ctx.fillText(tick.toFixed(4), x - 32, top + plotH + 28);
       }
-      for (const tick of niceTicks(ymin, ymax, yDivisions, yTickInterval)) {
+      for (const tick of niceTicks(ymin, ymax, yDiv, yTickInterval)) {
         const y = yp(tick);
         ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(left + plotW, y); ctx.stroke();
         ctx.fillText(tick.toPrecision(3), 24, y + 4);
@@ -926,11 +819,8 @@
       const guideLabel = plotOptions.guideLineLabel ? String(plotOptions.guideLineLabel) : undefined;
       let trackResult;
       if (plotOptions.trackSmooth && yKey === 'heat_flux_savgol_w_cm2') {
-        const allSmoothValues = datasets.flatMap(set => set.data.map(row => ({ x: row.time_s, y: row[yKey] })));
-        if (allSmoothValues.length) {
-          const maxEntry = allSmoothValues.reduce((best, current) => current.y > best.y ? current : best, allSmoothValues[0]);
-          trackResult = { x: maxEntry.x, y: maxEntry.y };
-        }
+        const allVals = datasets.flatMap(set => set.data.map(row => ({ x: row.time_s, y: row[yKey] })));
+        if (allVals.length) trackResult = allVals.reduce((best, cur) => cur.y > best.y ? cur : best, allVals[0]);
       }
       datasets.forEach((set, index) => {
         ctx.strokeStyle = palette[index % palette.length];
@@ -941,15 +831,13 @@
           if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
           if (showMarkers) {
             ctx.fillStyle = ctx.strokeStyle;
-            ctx.beginPath();
-            ctx.arc(x, y, Math.max(2, lineW), 0, Math.PI * 2);
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(x, y, Math.max(2, lineW), 0, Math.PI * 2); ctx.fill();
           }
         });
         ctx.stroke();
         const legendY = top + 10 + index * 24;
         ctx.beginPath(); ctx.moveTo(width - right + 18, legendY); ctx.lineTo(width - right + 45, legendY); ctx.stroke();
-        ctx.fillStyle = "#0f1f2c"; ctx.font = "13px Arial";
+        ctx.fillStyle = "#172026"; ctx.font = "13px Arial";
         ctx.fillText(set.name.slice(0, 32), width - right + 54, legendY + 4);
       });
       if (guideType !== 'none' && Number.isFinite(guideValue)) {
@@ -969,13 +857,13 @@
       }
       if (trackResult) {
         const y = yp(trackResult.y);
-        ctx.save(); ctx.strokeStyle = '#0d6e9e'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]);
+        ctx.save(); ctx.strokeStyle = '#0f7ca8'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]);
         ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(left + plotW, y); ctx.stroke();
-        ctx.fillStyle = '#0d6e9e'; ctx.font = '14px Arial';
+        ctx.fillStyle = '#0f7ca8'; ctx.font = '14px Arial';
         ctx.fillText(`Smooth max: ${trackResult.y.toPrecision(6)} at ${trackResult.x.toPrecision(6)} s`, left + 8, y - 10);
         ctx.restore();
       }
-      ctx.fillStyle = "#0f1f2c"; ctx.font = "14px Arial";
+      ctx.fillStyle = "#172026"; ctx.font = "14px Arial";
       ctx.fillText("Time (s)", left + plotW / 2 - 28, height - 34);
       ctx.fillText("Heat flux (W/cm²)", 22, 42);
       return trackResult;
@@ -983,8 +871,9 @@
 
     function csvForDataset(dataset) {
       const lines = ["time_s,heat_flux_w_cm2,heat_flux_savgol_w_cm2"];
-      for (const row of dataset.data)
+      for (const row of dataset.data) {
         lines.push([row.time_s, row.heat_flux_w_cm2, row.heat_flux_savgol_w_cm2].join(","));
+      }
       return lines.join("\n");
     }
 
@@ -992,25 +881,22 @@
       const blob = new Blob([content], { type });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.className = "button secondary";
-      a.href = url; a.download = name; a.textContent = `Download ${name}`;
-      return a;
+      a.className = "btn secondary"; a.href = url; a.download = name;
+      a.textContent = `Download ${name}`; return a;
     }
 
     function canvasDownloadLink(canvas, name) {
       const a = document.createElement("a");
-      a.className = "button secondary";
-      a.href = canvas.toDataURL("image/png"); a.download = name; a.textContent = `Download ${name}`;
-      return a;
+      a.className = "btn secondary"; a.href = canvas.toDataURL("image/png"); a.download = name;
+      a.textContent = `Download ${name}`; return a;
     }
 
     function renderTables(datasets) {
       const container = document.getElementById("tables");
       container.innerHTML = "";
       datasets.forEach(set => {
-        const heading = document.createElement("h3");
+        const heading = document.createElement("h2");
         heading.textContent = set.name;
-        heading.style.cssText = "padding:16px 20px 8px; font-size:14px; color:var(--ink-soft);";
         const table = document.createElement("table");
         table.innerHTML = "<thead><tr><th>time_s</th><th>heat_flux_w_cm2</th><th>heat_flux_savgol_w_cm2</th></tr></thead>";
         const body = document.createElement("tbody");
@@ -1027,7 +913,7 @@
 
     document.getElementById("converter-form").addEventListener("submit", async event => {
       event.preventDefault();
-      showMessage("Processing data...");
+      showMessage("Processing data…", 'processing');
       try {
         const files = [...document.getElementById("files").files];
         const settings = {
@@ -1057,20 +943,18 @@
           trackSmooth: parseBoolean(document.getElementById('trackSmooth').value)
         };
         const all = [];
-        for (const file of files) all.push(...await readFileDatasets(file, settings));
+        for (const file of files) { all.push(...await readFileDatasets(file, settings)); }
         if (!all.length) throw new Error("No usable numeric time/voltage data was found.");
         const rawCanvas = document.getElementById("raw-canvas");
         const smoothCanvas = document.getElementById("smooth-canvas");
         drawPlot(rawCanvas, all, "heat_flux_w_cm2", "Combined Raw Heat Flux vs Time", plotOptions);
-        const smoothMetrics = drawPlot(smoothCanvas, all, "heat_flux_savgol_w_cm2",
-          `Combined Savitzky-Golay Heat Flux vs Time (${settings.smoothWindow} pts)`, plotOptions);
+        const smoothMetrics = drawPlot(smoothCanvas, all, "heat_flux_savgol_w_cm2", `Combined Savitzky-Golay Heat Flux vs Time (${settings.smoothWindow} points)`, plotOptions);
         const trackSummary = document.getElementById('track-summary');
         if (plotOptions.trackSmooth && smoothMetrics) {
           trackSummary.style.display = 'block';
           trackSummary.textContent = `Tracked smooth maximum: ${smoothMetrics.y.toPrecision(6)} W/cm² at ${smoothMetrics.x.toPrecision(6)} s`;
         } else {
           trackSummary.style.display = 'none';
-          trackSummary.textContent = '';
         }
         const downloads = document.getElementById("downloads");
         downloads.innerHTML = "";
@@ -1080,10 +964,10 @@
         renderTables(all);
         document.getElementById("combined-section").style.display = "block";
         document.getElementById("table-section").style.display = "block";
-        showMessage("");
-        document.getElementById("combined-section").scrollIntoView({ behavior: "smooth", block: "start" });
+        document.getElementById("combined-section").scrollIntoView({ behavior: 'smooth', block: 'start' });
+        showMessage("", '');
       } catch (error) {
-        showMessage(error.message || String(error));
+        showMessage(error.message || String(error), '');
       }
     });
   </script>
