@@ -344,47 +344,47 @@
     <a class="nav-cta" href="#converter">Start Converting</a>
   </nav>
 
-  <section class="hero">
-    <div class="hero-badge">Free &middot; No signup &middot; Runs in your browser</div>
-    <h1>Convert Voltage to<br><span>Heat Flux</span> Instantly</h1>
-    <p>Upload your voltage vs time data, apply Cook-Felderman reduction with Savitzky-Golay smoothing, and get publication-ready heat flux graphs in seconds.</p>
-    <div class="hero-actions">
+  <section class="hero" data-animate-stagger="0.12" data-animate-on="load">
+    <div class="hero-badge" data-animate="fade-up">Free &middot; No signup &middot; Runs in your browser</div>
+    <h1 data-animate="fade-up">Convert Voltage to<br><span>Heat Flux</span> Instantly</h1>
+    <p data-animate="fade-up">Upload your voltage vs time data, apply Cook-Felderman reduction with Savitzky-Golay smoothing, and get publication-ready heat flux graphs in seconds.</p>
+    <div class="hero-actions" data-animate="fade-up">
       <a class="btn-primary" href="#converter">Upload &amp; Convert Now</a>
       <a class="btn-outline" href="#how-it-works">How it works</a>
     </div>
   </section>
 
   <section class="benefits">
-    <div class="benefits-inner">
-      <div class="benefit-item">
+    <div class="benefits-inner" data-animate-stagger="0.1">
+      <div class="benefit-item" data-animate="fade-up">
         <div class="benefit-icon">&#x1F512;</div>
         <div>
           <h3>100% Private</h3>
           <p>All processing happens in your browser. Your data is never uploaded to any server.</p>
         </div>
       </div>
-      <div class="benefit-item">
+      <div class="benefit-item" data-animate="fade-up">
         <div class="benefit-icon">&#x26A1;</div>
         <div>
           <h3>Instant Results</h3>
           <p>Get heat flux graphs and downloadable CSV data in seconds, not hours.</p>
         </div>
       </div>
-      <div class="benefit-item">
+      <div class="benefit-item" data-animate="fade-up">
         <div class="benefit-icon">&#x1F4CA;</div>
         <div>
           <h3>Publication-Ready Plots</h3>
           <p>Export high-resolution PNG charts with raw and smoothed curves side by side.</p>
         </div>
       </div>
-      <div class="benefit-item">
+      <div class="benefit-item" data-animate="fade-up">
         <div class="benefit-icon">&#x1F9EE;</div>
         <div>
           <h3>Cook-Felderman Method</h3>
           <p>Implements the standard numerical reduction used in thermal research.</p>
         </div>
       </div>
-      <div class="benefit-item">
+      <div class="benefit-item" data-animate="fade-up">
         <div class="benefit-icon">&#x1F4C1;</div>
         <div>
           <h3>Excel &amp; CSV Support</h3>
@@ -972,32 +972,10 @@
     });
   </script>
 
-  <!-- Motion (vanilla animation library by the Framer Motion team) -->
+  <!-- Reusable Motion animations (see assets/motion-animations.js) -->
   <script type="module">
-    import { animate, inView, stagger } from "https://cdn.jsdelivr.net/npm/motion@11.11.13/+esm";
-
-    // Hero entrance
-    const heroTargets = document.querySelectorAll(
-      ".hero-badge, .hero h1, .hero p, .hero-actions"
-    );
-    animate(
-      heroTargets,
-      { opacity: [0, 1], transform: ["translateY(20px)", "translateY(0px)"] },
-      { duration: 0.6, delay: stagger(0.12) }
-    );
-
-    // Reveal benefit cards as they scroll into view
-    inView(
-      ".benefit-item",
-      (element) => {
-        animate(
-          element,
-          { opacity: [0, 1], transform: ["translateY(24px)", "translateY(0px)"] },
-          { duration: 0.5 }
-        );
-      },
-      { amount: 0.3 }
-    );
+    import { initAnimations } from "./assets/motion-animations.js";
+    initAnimations();
   </script>
 </body>
 </html>
