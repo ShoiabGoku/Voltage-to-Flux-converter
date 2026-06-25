@@ -971,5 +971,33 @@
       }
     });
   </script>
+
+  <!-- Motion (vanilla animation library by the Framer Motion team) -->
+  <script type="module">
+    import { animate, inView, stagger } from "https://cdn.jsdelivr.net/npm/motion@11.11.13/+esm";
+
+    // Hero entrance
+    const heroTargets = document.querySelectorAll(
+      ".hero-badge, .hero h1, .hero p, .hero-actions"
+    );
+    animate(
+      heroTargets,
+      { opacity: [0, 1], transform: ["translateY(20px)", "translateY(0px)"] },
+      { duration: 0.6, delay: stagger(0.12) }
+    );
+
+    // Reveal benefit cards as they scroll into view
+    inView(
+      ".benefit-item",
+      (element) => {
+        animate(
+          element,
+          { opacity: [0, 1], transform: ["translateY(24px)", "translateY(0px)"] },
+          { duration: 0.5 }
+        );
+      },
+      { amount: 0.3 }
+    );
+  </script>
 </body>
 </html>
